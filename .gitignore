@@ -9,6 +9,10 @@ out/
 .env.local
 .env*.local
 
+# Cloudflare / OpenNext
+.open-next/
+.worker-next/
+
 # misc
 .DS_Store
 *.pem
