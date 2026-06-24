@@ -6,3 +6,11 @@ main = ".open-next/worker.js"
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+[[routes]]
+pattern = "howsthefield.com"
+custom_domain = true
+
+[[routes]]
+pattern = "www.howsthefield.com"
+custom_domain = true
