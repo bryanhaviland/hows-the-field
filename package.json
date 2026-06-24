@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cf:build": "opennextjs-cloudflare build && cp .open-next/worker.js .open-next/_worker.js && cp -r .open-next/assets/_next .open-next/ && cp .open-next/assets/BUILD_ID .open-next/",
+    "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && wrangler pages dev",
     "cf:deploy": "opennextjs-cloudflare build && wrangler pages deploy"
   },
