@@ -6,8 +6,10 @@ import ComplexCard from '@/components/ComplexCard'
 import SearchFilters from '@/components/SearchFilters'
 
 export interface Filters {
+  search: string
   sport: string
   city: string
+  state: string
   concessions: boolean
   tents: boolean
   pets: boolean
@@ -17,8 +19,10 @@ export interface Filters {
 }
 
 const defaultFilters: Filters = {
+  search: '',
   sport: 'all',
   city: 'all',
+  state: 'all',
   concessions: false,
   tents: false,
   pets: false,
@@ -47,7 +51,12 @@ export default function HomePage() {
 
   useEffect(() => {
     let results = [...complexes]
+    if (filters.search.trim()) {
+      const q = filters.search.trim().toLowerCase()
+      results = results.filter(c => c.name.toLowerCase().includes(q))
+    }
     if (filters.sport !== 'all') results = results.filter(c => c.sport_type === filters.sport || c.sport_type === 'both')
+    if (filters.state !== 'all') results = results.filter(c => c.state === filters.state)
     if (filters.city !== 'all') results = results.filter(c => c.city === filters.city)
     if (filters.concessions) results = results.filter(c => c.concessions_onsite === true)
     if (filters.tents) results = results.filter(c => c.tents_allowed === true)
@@ -58,7 +67,14 @@ export default function HomePage() {
     setFiltered(results)
   }, [filters, complexes])
 
-  const cities = Array.from(new Set(complexes.map(c => c.city))).sort()
+  const states = Array.from(new Set(complexes.map(c => c.state))).sort()
+  const cities = Array.from(
+    new Set(
+      complexes
+        .filter(c => filters.state === 'all' || c.state === filters.state)
+        .map(c => c.city)
+    )
+  ).sort()
 
   return (
     <div>
@@ -67,7 +83,7 @@ export default function HomePage() {
         <p className="text-gray-500 mt-1 text-sm">Know before you load the car.</p>
       </div>
 
-      <SearchFilters filters={filters} onChange={setFilters} cities={cities} />
+      <SearchFilters filters={filters} onChange={setFilters} cities={cities} states={states} />
 
       {loading ? (
         <div className="text-center py-16 text-gray-400">Loading complexes…</div>

@@ -6,6 +6,7 @@ interface Props {
   filters: Filters
   onChange: (f: Filters) => void
   cities: string[]
+  states: string[]
 }
 
 const toggleClass = (active: boolean) =>
@@ -15,13 +16,25 @@ const toggleClass = (active: boolean) =>
       : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
   }`
 
-export default function SearchFilters({ filters, onChange, cities }: Props) {
+export default function SearchFilters({ filters, onChange, cities, states }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
   const toggle = (key: keyof Filters) => set({ [key]: !filters[key] })
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
-      {/* Sport + City */}
+      {/* Search */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Search</label>
+        <input
+          type="text"
+          placeholder="Search parks by name…"
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white"
+          value={filters.search}
+          onChange={e => set({ search: e.target.value })}
+        />
+      </div>
+
+      {/* Sport + State + City */}
       <div className="flex flex-wrap gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Sport</label>
@@ -33,6 +46,17 @@ export default function SearchFilters({ filters, onChange, cities }: Props) {
             <option value="all">All sports</option>
             <option value="softball">Softball</option>
             <option value="baseball">Baseball</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State</label>
+          <select
+            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white"
+            value={filters.state}
+            onChange={e => set({ state: e.target.value, city: 'all' })}
+          >
+            <option value="all">All states</option>
+            {states.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>

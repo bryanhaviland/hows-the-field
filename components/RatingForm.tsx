@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess } from '@/lib/supabase'
+import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess, Field } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
+import AuthModal from '@/components/AuthModal'
 
 interface Props {
   complexId: string
+  fields: Field[]
+  /** Pre-select a specific field, e.g. when the user clicked "leave a note" on that field. */
+  initialFieldId?: string | null
   onSubmit: () => void
 }
 
@@ -90,18 +95,42 @@ const defaultForm = {
   reviewer_note: '',
 }
 
-export default function RatingForm({ complexId, onSubmit }: Props) {
+export default function RatingForm({ complexId, fields, initialFieldId = null, onSubmit }: Props) {
+  const { user } = useAuth()
   const [form, setForm] = useState(defaultForm)
+  const [fieldId, setFieldId] = useState<string | null>(initialFieldId)
+  const [anonymous, setAnonymous] = useState(false)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
 
   const set = (patch: Partial<typeof defaultForm>) => setForm(f => ({ ...f, ...patch }))
+
+  if (!user) {
+    return (
+      <div className="mt-4 bg-white rounded-lg border border-gray-200 p-4 text-center">
+        <p className="text-sm text-gray-600 mb-3">Log in to submit a visit report — it helps us credit consistent reviewers.</p>
+        <button
+          onClick={() => setShowAuth(true)}
+          className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+        >
+          Log in / create account
+        </button>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      </div>
+    )
+  }
 
   const handleSubmit = async () => {
     setSaving(true)
 
     // Build the insert — only include fields the user actually touched
-    const row: Record<string, unknown> = { complex_id: complexId }
+    const row: Record<string, unknown> = {
+      complex_id: complexId,
+      field_id: fieldId,
+      user_id: user.id,
+      is_anonymous: anonymous,
+    }
 
     if (form.visit_date)              row.visit_date              = form.visit_date
     if (form.bathroom_cleanliness > 0) row.bathroom_cleanliness   = form.bathroom_cleanliness
@@ -139,6 +168,19 @@ export default function RatingForm({ complexId, onSubmit }: Props) {
       </p>
 
       <div className="bg-white rounded-lg border border-gray-200 px-4 py-1">
+
+        {/* Which field */}
+        <div className="flex items-center justify-between py-2 border-b border-gray-100">
+          <span className="text-sm text-gray-700">Which field is this about?</span>
+          <select
+            value={fieldId ?? 'whole-complex'}
+            onChange={e => setFieldId(e.target.value === 'whole-complex' ? null : e.target.value)}
+            className="text-sm border border-gray-300 rounded-lg px-2 py-1 bg-white max-w-[55%]"
+          >
+            <option value="whole-complex">Whole complex</option>
+            {fields.map(f => <option key={f.id} value={f.id}>{f.field_name}</option>)}
+          </select>
+        </div>
 
         {/* Visit date */}
         <div className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -211,6 +253,16 @@ export default function RatingForm({ complexId, onSubmit }: Props) {
           placeholder="Anything else parents should know before heading out? (optional)"
           className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 mt-1 mb-3 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
         />
+
+        <label className="flex items-center gap-2 py-3 border-t border-gray-100 text-sm text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={anonymous}
+            onChange={e => setAnonymous(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          Post this report anonymously (your name won&apos;t be shown — but it won&apos;t count toward your reviewer badge either)
+        </label>
       </div>
 
       <button

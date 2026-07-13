@@ -54,6 +54,9 @@ export interface FieldComplex {
 export interface Review {
   id: string
   complex_id: string
+  field_id: string | null
+  user_id: string | null
+  is_anonymous: boolean
   submitted_at: string
   visit_date: string | null
   bathroom_cleanliness: number | null
@@ -71,6 +74,31 @@ export interface Review {
   pets_allowed: boolean | null
   water_access: WaterAccess | null
   reviewer_note: string | null
+}
+
+export type ReviewerBadgeType = 'trusted_contributor' | 'rising_star'
+
+export interface Profile {
+  id: string
+  display_name: string
+  created_at: string
+}
+
+export interface ReviewerStats {
+  user_id: string
+  display_name: string
+  member_since: string
+  review_count: number
+  reviews_last_30_days: number
+  complexes_reviewed: number
+  last_review_at: string | null
+  badge: ReviewerBadgeType | null
+}
+
+export interface ReviewWithReviewer extends Review {
+  reviewer_display_name: string | null
+  reviewer_badge: ReviewerBadgeType | null
+  field_name: string | null
 }
 
 export interface RatingsSummary {

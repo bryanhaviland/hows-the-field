@@ -3,19 +3,22 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, FieldComplex, Field, RatingsSummary } from '@/lib/supabase'
+import { supabase, FieldComplex, Field, RatingsSummary, ReviewWithReviewer } from '@/lib/supabase'
 import AmenityRow from '@/components/AmenityRow'
 import RatingBar from '@/components/RatingBar'
 import FieldsList from '@/components/FieldsList'
 import RatingForm from '@/components/RatingForm'
 import CrowdRatings from '@/components/CrowdRatings'
+import ReviewsList from '@/components/ReviewsList'
 
 export default function ComplexDetail() {
   const { id } = useParams<{ id: string }>()
   const [complex, setComplex] = useState<FieldComplex | null>(null)
   const [fields, setFields] = useState<Field[]>([])
   const [summary, setSummary] = useState<RatingsSummary | null>(null)
+  const [reviews, setReviews] = useState<ReviewWithReviewer[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [focusFieldId, setFocusFieldId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const loadData = () =>
@@ -23,14 +26,24 @@ export default function ComplexDetail() {
       supabase.from('field_complexes').select('*').eq('id', id).single(),
       supabase.from('fields').select('*').eq('complex_id', id).order('field_name'),
       supabase.from('complex_ratings_summary').select('*').eq('complex_id', id).maybeSingle(),
-    ]).then(([{ data: c }, { data: f }, { data: s }]) => {
+      supabase.from('reviews_with_reviewer').select('*').eq('complex_id', id).order('submitted_at', { ascending: false }),
+    ]).then(([{ data: c }, { data: f }, { data: s }, { data: r }]) => {
       setComplex(c)
       setFields(f ?? [])
       setSummary(s ?? null)
+      setReviews((r as ReviewWithReviewer[]) ?? [])
       setLoading(false)
     })
 
   useEffect(() => { loadData() }, [id])
+
+  const leaveNoteOnField = (fieldId: string) => {
+    setFocusFieldId(fieldId)
+    setShowForm(true)
+    setTimeout(() => {
+      document.getElementById('submit-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
 
   if (loading) return <div className="text-center py-16 text-gray-400">Loading…</div>
   if (!complex) return <div className="text-center py-16 text-gray-400">Complex not found.</div>
@@ -139,14 +152,25 @@ export default function ComplexDetail() {
       )}
 
       {/* Fields */}
-      {fields.length > 0 && (
+      {fields.length > 0 ? (
         <Section title={`Fields (${fields.length})`}>
-          <FieldsList fields={fields} />
+          <FieldsList fields={fields} onLeaveNote={leaveNoteOnField} />
+        </Section>
+      ) : (
+        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-4 text-sm text-gray-500 text-center">
+          No individual fields listed for this complex yet — you can still leave a report about the complex as a whole below.
+        </div>
+      )}
+
+      {/* Individual reviews */}
+      {reviews.length > 0 && (
+        <Section title="Individual Reports" subtitle={`${reviews.length} report${reviews.length !== 1 ? 's' : ''}`}>
+          <ReviewsList reviews={reviews} />
         </Section>
       )}
 
       {/* Submit a report */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+      <div id="submit-report" className="bg-amber-50 border border-amber-200 rounded-xl p-5">
         <h3 className="font-semibold text-gray-900 mb-1">Been here recently?</h3>
         <p className="text-sm text-gray-600 mb-3">Help other parents know what to pack.</p>
         <button
@@ -156,11 +180,17 @@ export default function ComplexDetail() {
           {showForm ? 'Never mind' : 'Submit a visit report'}
         </button>
         {showForm && (
-          <RatingForm complexId={complex.id} onSubmit={() => {
-            setShowForm(false)
-            setLoading(true)
-            loadData()
-          }} />
+          <RatingForm
+            complexId={complex.id}
+            fields={fields}
+            initialFieldId={focusFieldId}
+            onSubmit={() => {
+              setShowForm(false)
+              setFocusFieldId(null)
+              setLoading(true)
+              loadData()
+            }}
+          />
         )}
       </div>
 

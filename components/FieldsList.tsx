@@ -10,7 +10,12 @@ const surfaceColor: Record<string, string> = {
   turf: 'bg-blue-100 text-blue-700',
 }
 
-export default function FieldsList({ fields }: { fields: Field[] }) {
+interface Props {
+  fields: Field[]
+  onLeaveNote?: (fieldId: string) => void
+}
+
+export default function FieldsList({ fields, onLeaveNote }: Props) {
   return (
     <div className="divide-y divide-gray-100">
       {fields.map(f => (
@@ -47,6 +52,14 @@ export default function FieldsList({ fields }: { fields: Field[] }) {
             )}
             {f.dugouts_block_view !== null && f.dugouts_block_view && (
               <span className="text-xs text-amber-600">⚠ Blocked view</span>
+            )}
+            {onLeaveNote && (
+              <button
+                onClick={() => onLeaveNote(f.id)}
+                className="text-xs text-amber-600 hover:text-amber-700 font-medium whitespace-nowrap"
+              >
+                💬 Leave a note on this field
+              </button>
             )}
           </div>
         </div>
