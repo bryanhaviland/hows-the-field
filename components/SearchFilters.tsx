@@ -12,7 +12,7 @@ interface Props {
 const toggleClass = (active: boolean) =>
   `px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer select-none ${
     active
-      ? 'bg-green-600 text-white border-green-600'
+      ? 'bg-blue-600 text-white border-blue-600'
       : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
   }`
 
@@ -46,6 +46,8 @@ export default function SearchFilters({ filters, onChange, cities, states }: Pro
             <option value="all">All sports</option>
             <option value="softball">Softball</option>
             <option value="baseball">Baseball</option>
+            <option value="soccer">Soccer</option>
+            <option value="flag_football">Flag Football</option>
           </select>
         </div>
         <div>

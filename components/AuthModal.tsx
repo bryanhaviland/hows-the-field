@@ -47,14 +47,14 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-4 mb-4">
           <button
             type="button"
-            className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${mode === 'sign-in' ? 'border-green-600 text-gray-900' : 'border-transparent text-gray-400'}`}
+            className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${mode === 'sign-in' ? 'border-blue-600 text-gray-900' : 'border-transparent text-gray-400'}`}
             onClick={() => switchMode('sign-in')}
           >
             Sign in
           </button>
           <button
             type="button"
-            className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${mode === 'sign-up' ? 'border-green-600 text-gray-900' : 'border-transparent text-gray-400'}`}
+            className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${mode === 'sign-up' ? 'border-blue-600 text-gray-900' : 'border-transparent text-gray-400'}`}
             onClick={() => switchMode('sign-up')}
           >
             Create account
@@ -69,7 +69,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
           <div>
@@ -80,17 +80,17 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
               minLength={6}
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
-          {info && <p className="text-sm text-green-700">{info}</p>}
+          {info && <p className="text-sm text-blue-700">{info}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
           >
             {submitting ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
           </button>

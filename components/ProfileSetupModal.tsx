@@ -35,13 +35,13 @@ export default function ProfileSetupModal() {
             onChange={e => setDisplayName(e.target.value)}
             maxLength={40}
             placeholder="e.g. Coach Dana"
-            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
           >
             {submitting ? 'Saving…' : 'Finish registering'}
           </button>

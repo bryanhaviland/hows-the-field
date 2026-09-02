@@ -43,7 +43,7 @@ export default function AccountMenu() {
       ) : (
         <button
           onClick={() => setShowAuth(true)}
-          className="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg transition-colors"
+          className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors"
         >
           Log in
         </button>

@@ -5,12 +5,16 @@ const sportBadge: Record<string, string> = {
   softball: 'bg-purple-100 text-purple-700',
   baseball: 'bg-blue-100 text-blue-700',
   both: 'bg-green-100 text-green-700',
+  soccer: 'bg-orange-100 text-orange-700',
+  flag_football: 'bg-amber-100 text-amber-700',
 }
 
 const sportLabel: Record<string, string> = {
   softball: 'Softball',
   baseball: 'Baseball',
   both: 'Softball & Baseball',
+  soccer: 'Soccer',
+  flag_football: 'Flag Football',
 }
 
 function Pip({ value, label }: { value: boolean | null; label: string }) {
@@ -37,7 +41,7 @@ export default function ComplexCard({ complex: c }: { complex: FieldComplex }) {
   const hasRatings = c.bathroom_cleanliness || c.concessions_quality
 
   return (
-    <Link href={`/complex/${c.id}`} className="block bg-white rounded-xl border border-gray-200 hover:border-green-400 hover:shadow-md transition-all p-4">
+    <Link href={`/complex/${c.id}`} className="block bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
           <h2 className="font-semibold text-gray-900 leading-tight">{c.name}</h2>

@@ -5,7 +5,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export type SportType = 'softball' | 'baseball' | 'both'
+export type SportType = 'softball' | 'baseball' | 'both' | 'soccer' | 'flag_football'
 export type FieldSurface = 'grass' | 'grass_clay' | 'clay' | 'turf'
 export type DugoutSize = 'small' | 'medium' | 'large'
 export type DugoutMaterial = 'cement' | 'chain_link' | 'wood' | 'mixed'

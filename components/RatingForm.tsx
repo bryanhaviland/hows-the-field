@@ -112,7 +112,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
         <p className="text-sm text-gray-600 mb-3">Log in to submit a visit report — it helps us credit consistent reviewers.</p>
         <button
           onClick={() => setShowAuth(true)}
-          className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
           Log in / create account
         </button>

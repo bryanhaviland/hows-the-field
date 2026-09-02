@@ -50,6 +50,7 @@ export default function ComplexDetail() {
 
   const sportLabel: Record<string, string> = {
     softball: 'Softball', baseball: 'Baseball', both: 'Softball & Baseball',
+    soccer: 'Soccer', flag_football: 'Flag Football',
   }
 
   return (
