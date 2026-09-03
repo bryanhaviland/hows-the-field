@@ -78,6 +78,17 @@ export interface Review {
 
 export type ReviewerBadgeType = 'trusted_contributor' | 'rising_star'
 
+export type ReportStatus = 'pending' | 'reviewed' | 'dismissed'
+
+export interface ReviewReport {
+  id: string
+  review_id: string
+  reporter_user_id: string
+  reason: string | null
+  status: ReportStatus
+  created_at: string
+}
+
 export interface Profile {
   id: string
   display_name: string
