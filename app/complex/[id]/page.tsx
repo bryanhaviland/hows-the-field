@@ -10,6 +10,7 @@ import FieldsList from '@/components/FieldsList'
 import RatingForm from '@/components/RatingForm'
 import CrowdRatings from '@/components/CrowdRatings'
 import ReviewsList from '@/components/ReviewsList'
+import SportIcon from '@/components/SportIcon'
 
 export default function ComplexDetail() {
   const { id } = useParams<{ id: string }>()
@@ -48,11 +49,6 @@ export default function ComplexDetail() {
   if (loading) return <div className="text-center py-16 text-gray-400">Loading…</div>
   if (!complex) return <div className="text-center py-16 text-gray-400">Complex not found.</div>
 
-  const sportLabel: Record<string, string> = {
-    softball: 'Softball', baseball: 'Baseball', both: 'Softball & Baseball',
-    soccer: 'Soccer', flag_football: 'Flag Football',
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-800">← Back to search</Link>
@@ -67,9 +63,7 @@ export default function ComplexDetail() {
               {complex.num_fields ? ` · ${complex.num_fields} fields` : ''}
             </p>
           </div>
-          <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-            {sportLabel[complex.sport_type]}
-          </span>
+          <SportIcon sport={complex.sport_type} size={22} />
         </div>
         {complex.website && (
           <a href={complex.website} target="_blank" rel="noopener noreferrer"

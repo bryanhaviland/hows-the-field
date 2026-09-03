@@ -1,21 +1,6 @@
 import Link from 'next/link'
 import { FieldComplex } from '@/lib/supabase'
-
-const sportBadge: Record<string, string> = {
-  softball: 'bg-purple-100 text-purple-700',
-  baseball: 'bg-blue-100 text-blue-700',
-  both: 'bg-green-100 text-green-700',
-  soccer: 'bg-orange-100 text-orange-700',
-  flag_football: 'bg-amber-100 text-amber-700',
-}
-
-const sportLabel: Record<string, string> = {
-  softball: 'Softball',
-  baseball: 'Baseball',
-  both: 'Softball & Baseball',
-  soccer: 'Soccer',
-  flag_football: 'Flag Football',
-}
+import SportIcon from './SportIcon'
 
 function Pip({ value, label }: { value: boolean | null; label: string }) {
   if (value === null) return null
@@ -47,9 +32,7 @@ export default function ComplexCard({ complex: c }: { complex: FieldComplex }) {
           <h2 className="font-semibold text-gray-900 leading-tight">{c.name}</h2>
           <p className="text-sm text-gray-500">{c.city}, {c.state} {c.num_fields ? `· ${c.num_fields} fields` : ''}</p>
         </div>
-        <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${sportBadge[c.sport_type]}`}>
-          {sportLabel[c.sport_type]}
-        </span>
+        <SportIcon sport={c.sport_type} />
       </div>
 
       {/* Key amenity pips */}
