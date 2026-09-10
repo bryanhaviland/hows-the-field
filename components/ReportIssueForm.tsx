@@ -8,8 +8,8 @@ import AuthModal from '@/components/AuthModal'
 const ISSUE_OPTIONS: { value: CorrectionIssueType; label: string }[] = [
   { value: 'name', label: 'Name' },
   { value: 'address', label: 'Address' },
-  { value: 'sports', label: 'Sports offered' },
-  { value: 'other', label: 'Something else' },
+  { value: 'sports', label: 'Sports Offered' },
+  { value: 'other', label: 'Something Else' },
 ]
 
 export default function ReportIssueForm({ complexId, complexName }: { complexId: string; complexName: string }) {

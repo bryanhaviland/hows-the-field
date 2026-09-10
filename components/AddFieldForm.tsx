@@ -16,6 +16,9 @@ const defaultForm = {
   field_name: '',
   field_surface: null as FieldSurface | null,
   outfield_depth: null as OutfieldDepth | null,
+  outfield_depth_left_ft: '' as string,
+  outfield_depth_center_ft: '' as string,
+  outfield_depth_right_ft: '' as string,
   backstop: null as BackstopDepth | null,
   dugout_size: null as DugoutSize | null,
   dugout_material: null as DugoutMaterial | null,
@@ -36,6 +39,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [showExactOutfield, setShowExactOutfield] = useState(false)
 
   const set = (patch: Partial<typeof defaultForm>) => setForm(f => ({ ...f, ...patch }))
 
@@ -47,7 +51,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
           onClick={() => setShowAuth(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          Log in / create account
+          Log In / Create Account
         </button>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </div>
@@ -68,6 +72,9 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
     }
     if (form.field_surface) row.field_surface = form.field_surface
     if (form.outfield_depth) row.outfield_depth = form.outfield_depth
+    if (form.outfield_depth_left_ft.trim()) row.outfield_depth_left_ft = Number(form.outfield_depth_left_ft)
+    if (form.outfield_depth_center_ft.trim()) row.outfield_depth_center_ft = Number(form.outfield_depth_center_ft)
+    if (form.outfield_depth_right_ft.trim()) row.outfield_depth_right_ft = Number(form.outfield_depth_right_ft)
     if (form.backstop) row.backstop = form.backstop
     if (form.dugout_size) row.dugout_size = form.dugout_size
     if (form.dugout_material) row.dugout_material = form.dugout_material
@@ -87,7 +94,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
   return (
     <div className="mt-3 bg-white rounded-lg border border-gray-200 px-4 py-1">
       <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <span className="text-sm text-gray-700">Field name</span>
+        <span className="text-sm text-gray-700">Field Name</span>
         <input
           type="text"
           value={form.field_name}
@@ -99,7 +106,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
       </div>
 
       <SelectPicker<FieldSurface>
-        label="Surface"
+        label="Infield Surface"
         value={form.field_surface}
         onChange={v => set({ field_surface: v })}
         options={[
@@ -110,7 +117,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
         ]}
       />
       <SelectPicker<OutfieldDepth>
-        label="Outfield depth"
+        label="Outfield Depth"
         value={form.outfield_depth}
         onChange={v => set({ outfield_depth: v })}
         options={[
@@ -119,6 +126,41 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
           { value: 'deep', label: 'Deep' },
         ]}
       />
+
+      <div className="border-b border-gray-100">
+        <button
+          type="button"
+          onClick={() => setShowExactOutfield(v => !v)}
+          className="w-full flex items-center gap-1.5 py-2 text-xs font-medium text-blue-600 hover:text-blue-700"
+        >
+          <span className={`inline-block transition-transform ${showExactOutfield ? 'rotate-90' : ''}`}>&#9656;</span>
+          Add Exact Measurements
+        </button>
+        {showExactOutfield && (
+          <div className="pb-2 pl-4 space-y-1">
+            {([
+              ['Left', 'outfield_depth_left_ft'],
+              ['Center', 'outfield_depth_center_ft'],
+              ['Right', 'outfield_depth_right_ft'],
+            ] as const).map(([rowLabel, key]) => (
+              <div key={key} className="flex items-center justify-between py-1">
+                <span className="text-sm text-gray-600">{rowLabel}</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={form[key]}
+                    onChange={e => set({ [key]: e.target.value } as Partial<typeof defaultForm>)}
+                    placeholder="0"
+                    className="w-16 text-sm text-right border border-gray-300 rounded-lg px-2 py-1"
+                  />
+                  <span className="text-xs text-gray-500">ft</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <SelectPicker<BackstopDepth>
         label="Backstop"
         value={form.backstop}
@@ -130,7 +172,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
         ]}
       />
       <SelectPicker<DugoutSize>
-        label="Dugout size"
+        label="Dugout Size"
         value={form.dugout_size}
         onChange={v => set({ dugout_size: v })}
         options={[
@@ -140,19 +182,19 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
         ]}
       />
       <SelectPicker<DugoutMaterial>
-        label="Dugout material"
+        label="Dugout Material"
         value={form.dugout_material}
         onChange={v => set({ dugout_material: v })}
         options={[
           { value: 'cement', label: 'Cement' },
-          { value: 'chain_link', label: 'Chain link' },
+          { value: 'chain_link', label: 'Chain Link' },
           { value: 'wood', label: 'Wood' },
           { value: 'mixed', label: 'Mixed' },
         ]}
       />
-      <BoolPicker label="Covered dugouts" value={form.covered_dugouts} onChange={v => set({ covered_dugouts: v })} />
-      <BoolPicker label="Dugouts block view" value={form.dugouts_block_view} onChange={v => set({ dugouts_block_view: v })} />
-      <BoolPicker label="Covered stands" value={form.covered_stands} onChange={v => set({ covered_stands: v })} />
+      <BoolPicker label="Covered Dugouts" value={form.covered_dugouts} onChange={v => set({ covered_dugouts: v })} />
+      <BoolPicker label="Dugouts Block View" value={form.dugouts_block_view} onChange={v => set({ dugouts_block_view: v })} />
+      <BoolPicker label="Covered Stands" value={form.covered_stands} onChange={v => set({ covered_stands: v })} />
 
       {error && <p className="text-sm text-red-600 py-2">{error}</p>}
 
@@ -162,7 +204,7 @@ export default function AddFieldForm({ complexId, onSubmit, onCancel }: Props) {
           disabled={saving}
           className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
-          {saving ? 'Saving…' : 'Add field'}
+          {saving ? 'Saving…' : 'Add Field'}
         </button>
         <button
           onClick={onCancel}

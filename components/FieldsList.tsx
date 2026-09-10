@@ -27,7 +27,15 @@ export default function FieldsList({ fields, onLeaveNote }: Props) {
               {surfaceLabel[f.field_surface]}
             </span>
           )}
-          {f.outfield_depth && (
+          {(f.outfield_depth_left_ft || f.outfield_depth_center_ft || f.outfield_depth_right_ft) ? (
+            <span className="text-xs text-gray-500">
+              OF: {[
+                f.outfield_depth_left_ft != null && `L ${f.outfield_depth_left_ft}'`,
+                f.outfield_depth_center_ft != null && `C ${f.outfield_depth_center_ft}'`,
+                f.outfield_depth_right_ft != null && `R ${f.outfield_depth_right_ft}'`,
+              ].filter(Boolean).join(' / ')}
+            </span>
+          ) : f.outfield_depth && (
             <span className="text-xs text-gray-500">OF: {f.outfield_depth}</span>
           )}
           {f.backstop && (
@@ -42,23 +50,23 @@ export default function FieldsList({ fields, onLeaveNote }: Props) {
           <div className="flex gap-2 ml-auto">
             {f.covered_dugouts !== null && (
               <span className={`text-xs ${f.covered_dugouts ? 'text-green-600' : 'text-gray-400'}`}>
-                {f.covered_dugouts ? '✓ Covered dug' : '✗ Open dug'}
+                {f.covered_dugouts ? '✓ Covered Dug' : '✗ Open Dug'}
               </span>
             )}
             {f.covered_stands !== null && (
               <span className={`text-xs ${f.covered_stands ? 'text-green-600' : 'text-gray-400'}`}>
-                {f.covered_stands ? '✓ Covered stands' : '✗ Open stands'}
+                {f.covered_stands ? '✓ Covered Stands' : '✗ Open Stands'}
               </span>
             )}
             {f.dugouts_block_view !== null && f.dugouts_block_view && (
-              <span className="text-xs text-amber-600">⚠ Blocked view</span>
+              <span className="text-xs text-amber-600">⚠ Blocked View</span>
             )}
             {onLeaveNote && (
               <button
                 onClick={() => onLeaveNote(f.id)}
                 className="text-xs text-amber-600 hover:text-amber-700 font-medium whitespace-nowrap"
               >
-                💬 Leave a note on this field
+                💬 Leave A Note On This Field
               </button>
             )}
           </div>

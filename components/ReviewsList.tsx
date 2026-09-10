@@ -62,7 +62,7 @@ function ReportControl({ reviewId }: { reviewId: string }) {
           }}
           className="font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
         >
-          {submitting ? 'Reporting…' : 'Yes, report'}
+          {submitting ? 'Reporting…' : 'Yes, Report'}
         </button>
         <button type="button" disabled={submitting} onClick={() => setState('idle')} className="text-gray-400 hover:text-gray-600 disabled:opacity-50">
           Cancel
@@ -110,7 +110,7 @@ export default function ReviewsList({ reviews, complexes, emptyMessage = 'No rep
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">📍 {r.field_name}</span>
               )}
               <span className="text-xs text-gray-400 ml-auto">
-                {new Date(r.visit_date ?? r.submitted_at).toLocaleDateString()}
+                {new Date(r.submitted_at).toLocaleDateString()}
               </span>
             </div>
 

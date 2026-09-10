@@ -11,9 +11,10 @@ export type DugoutSize = 'small' | 'medium' | 'large'
 export type DugoutMaterial = 'cement' | 'chain_link' | 'wood' | 'mixed'
 export type ShadeAmount = 'none' | 'minimal' | 'moderate' | 'ample'
 export type WalkwaysCongestion = 'open' | 'moderate' | 'tight'
-export type WaterAccess = 'purchase_only' | 'fountains_marginal' | 'fountains_good' | 'bottle_filler'
+export type WaterAccess = 'purchase_only' | 'fountains_marginal' | 'fountains_good' | 'bottle_filler' | 'none'
 export type OutfieldDepth = 'short' | 'standard' | 'deep'
 export type BackstopDepth = 'short' | 'normal' | 'deep'
+export type ConcessionsTime = 'breakfast' | 'lunch' | 'dinner' | 'select_times_only'
 
 export interface FieldComplex {
   id: string
@@ -42,7 +43,6 @@ export interface Review {
   user_id: string | null
   is_anonymous: boolean
   submitted_at: string
-  visit_date: string | null
   bathroom_cleanliness: number | null
   diaper_changing_tables: boolean | null
   soap_stocked: boolean | null
@@ -62,6 +62,8 @@ export interface Review {
   free_admission: boolean | null
   /** Crowdsourced report: was there ample parking during this visit? */
   ample_parking: boolean | null
+  /** Crowdsourced report: when were concessions available during this visit? */
+  concessions_available_for: ConcessionsTime[] | null
   water_access: WaterAccess | null
   reviewer_note: string | null
 }
@@ -177,6 +179,10 @@ export interface RatingsSummary {
   pct_concessions_onsite: number | null
   pct_free_admission: number | null
   pct_ample_parking: number | null
+  pct_concessions_breakfast: number | null
+  pct_concessions_lunch: number | null
+  pct_concessions_dinner: number | null
+  pct_concessions_select_times_only: number | null
 }
 
 export interface Field {
@@ -191,6 +197,9 @@ export interface Field {
   dugouts_block_view: boolean | null
   covered_stands: boolean | null
   outfield_depth: OutfieldDepth | null
+  outfield_depth_left_ft: number | null
+  outfield_depth_center_ft: number | null
+  outfield_depth_right_ft: number | null
   backstop: BackstopDepth | null
   created_at: string
 }

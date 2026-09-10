@@ -36,10 +36,11 @@ function PctRow({ label, pct }: { label: string; pct: number | null }) {
 }
 
 const waterLabel: Record<string, string> = {
-  purchase_only: 'Purchase only',
-  fountains_marginal: 'Fountains (marginal)',
-  fountains_good: 'Fountains (good)',
-  bottle_filler: 'Bottle filler',
+  purchase_only: 'Purchase Only',
+  fountains_marginal: 'Drinking Fountain - Barely Working',
+  fountains_good: 'Drinking Fountain - Good Condition',
+  bottle_filler: 'Bottle Filler',
+  none: 'None Available',
 }
 
 /**
@@ -64,35 +65,39 @@ export default function CrowdRatings({ summary: s }: Props) {
       {/* Averages */}
       {(s.avg_bathroom_cleanliness || s.avg_concessions_quality || s.avg_concessions_value || s.avg_bleachers_cleanliness) && (
         <div className="mb-3">
-          <AvgBar label="Bathroom cleanliness" value={s.avg_bathroom_cleanliness} />
-          <AvgBar label="Concessions quality"  value={s.avg_concessions_quality} />
-          <AvgBar label="Concessions value"    value={s.avg_concessions_value} />
-          <AvgBar label="Bleacher cleanliness" value={s.avg_bleachers_cleanliness} />
+          <AvgBar label="Bathroom Cleanliness" value={s.avg_bathroom_cleanliness} />
+          <AvgBar label="Concessions Quality"  value={s.avg_concessions_quality} />
+          <AvgBar label="Concessions Value"    value={s.avg_concessions_value} />
+          <AvgBar label="Bleacher Cleanliness" value={s.avg_bleachers_cleanliness} />
         </div>
       )}
 
       {/* Boolean percentages */}
-      <PctRow label="Diaper changing tables" pct={s.pct_diaper_tables} />
-      <PctRow label="Soap stocked"           pct={s.pct_soap_stocked} />
-      <PctRow label="Paper towels stocked"   pct={s.pct_paper_towels} />
-      <PctRow label="Hard surface for chairs" pct={s.pct_cement_pad} />
+      <PctRow label="Diaper Changing Tables" pct={s.pct_diaper_tables} />
+      <PctRow label="Soap Stocked"           pct={s.pct_soap_stocked} />
+      <PctRow label="Paper Towels Stocked"   pct={s.pct_paper_towels} />
+      <PctRow label="Hard Surface For Chairs" pct={s.pct_cement_pad} />
+      <PctRow label="Concessions Available: Breakfast" pct={s.pct_concessions_breakfast} />
+      <PctRow label="Concessions Available: Lunch" pct={s.pct_concessions_lunch} />
+      <PctRow label="Concessions Available: Dinner" pct={s.pct_concessions_dinner} />
+      <PctRow label="Concessions: Select Times Only" pct={s.pct_concessions_select_times_only} />
 
       {/* Categoricals */}
       {s.mode_water_access && (
         <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">
-          <span className="text-gray-600">💧 Water (most reported)</span>
+          <span className="text-gray-600">💧 Water (Most Reported)</span>
           <span className="font-medium text-blue-700">{waterLabel[s.mode_water_access]}</span>
         </div>
       )}
       {s.mode_shade_amount && (
         <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">
-          <span className="text-gray-600">☀️ Shade (most reported)</span>
+          <span className="text-gray-600">☀️ Shade (Most Reported)</span>
           <span className="font-medium capitalize">{s.mode_shade_amount}</span>
         </div>
       )}
       {s.mode_walkways_congestion && (
         <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">
-          <span className="text-gray-600">🚶 Walkways (most reported)</span>
+          <span className="text-gray-600">🚶 Walkways (Most Reported)</span>
           <span className={`font-medium capitalize ${
             s.mode_walkways_congestion === 'tight' ? 'text-red-600'
             : s.mode_walkways_congestion === 'open' ? 'text-green-600'

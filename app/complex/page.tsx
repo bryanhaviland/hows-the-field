@@ -93,7 +93,7 @@ function ComplexDetailInner() {
         {complex.website && (
           <a href={complex.website} target="_blank" rel="noopener noreferrer"
             className="mt-3 inline-block text-sm text-blue-600 hover:underline">
-            Visit website →
+            Visit Website →
           </a>
         )}
       </div>
@@ -116,7 +116,7 @@ function ComplexDetailInner() {
               onClick={() => setShowMoreCrowdData(v => !v)}
               className="mt-3 text-xs text-gray-400 hover:text-gray-600 underline"
             >
-              {showMoreCrowdData ? 'Hide full crowd-sourced report' : 'See full crowd-sourced report'}
+              {showMoreCrowdData ? 'Hide Full Crowd-Sourced Report' : 'See Full Crowd-Sourced Report'}
             </button>
             {showMoreCrowdData && (
               <div className="mt-3 pt-3 border-t border-gray-100">
@@ -133,14 +133,14 @@ function ComplexDetailInner() {
         <div className="mt-3 pt-3 border-t border-gray-100">
           {myReview && !showForm ? (
             <button onClick={openReviewForm} className="text-sm text-blue-600 hover:underline font-medium">
-              Edit my Review of Amenities
+              Edit My Review Of Amenities
             </button>
           ) : !showForm ? (
             <button
               onClick={openReviewForm}
               className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
             >
-              Submit a visit report
+              Submit A Visit Report
             </button>
           ) : null}
         </div>
@@ -150,19 +150,18 @@ function ComplexDetailInner() {
         <div id="submit-report" className="bg-amber-50 border border-amber-200 rounded-xl p-5">
           <div className="flex items-start justify-between gap-3 mb-1">
             <div>
-              <h3 className="font-semibold text-gray-900">Been here recently?</h3>
+              <h3 className="font-semibold text-gray-900">Been Here Recently?</h3>
               <p className="text-sm text-gray-600">Help other parents know what to pack.</p>
             </div>
             <button
               onClick={() => { setShowForm(false); setEditingReview(null); setFocusFieldId(null) }}
               className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
             >
-              Never mind
+              Never Mind
             </button>
           </div>
           <RatingForm
             complexId={complex.id}
-            fields={fields}
             initialFieldId={focusFieldId}
             existingReview={editingReview}
             onSubmit={() => {
@@ -196,7 +195,7 @@ function ComplexDetailInner() {
             onClick={() => setShowAddField(true)}
             className="mt-3 text-sm text-blue-600 hover:underline font-medium"
           >
-            + Add a field
+            + Add A Field
           </button>
         )}
       </Section>

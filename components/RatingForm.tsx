@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess, Field, Review } from '@/lib/supabase'
+import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess, ConcessionsTime, Review } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import AuthModal from '@/components/AuthModal'
 
 interface Props {
   complexId: string
-  fields: Field[]
-  /** Pre-select a specific field, e.g. when the user clicked "leave a note" on that field. */
+  /** Pre-select a specific field, e.g. when the user clicked "leave a note" on that field. Not user-editable — the fields table is its own separate form. */
   initialFieldId?: string | null
   /** The current user's own existing review, when they're editing it rather than filing a new visit report. */
   existingReview?: Review | null
@@ -78,8 +77,35 @@ export function SelectPicker<T extends string>({
   )
 }
 
+export function MultiSelectPicker<T extends string>({
+  label, values, onChange, options
+}: {
+  label: string
+  values: T[]
+  onChange: (v: T[]) => void
+  options: { value: T; label: string }[]
+}) {
+  const toggle = (v: T) => onChange(values.includes(v) ? values.filter(x => x !== v) : [...values, v])
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+      <span className="text-sm text-gray-700">{label}</span>
+      <div className="flex gap-1 flex-wrap justify-end">
+        {options.map(o => (
+          <button key={o.value} type="button" onClick={() => toggle(o.value)}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              values.includes(o.value)
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+            }`}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const defaultForm = {
-  visit_date: '',
   bathroom_cleanliness: 0,
   diaper_changing_tables: null as boolean | null,
   soap_stocked: null as boolean | null,
@@ -96,13 +122,13 @@ const defaultForm = {
   concessions_onsite: null as boolean | null,
   free_admission: null as boolean | null,
   ample_parking: null as boolean | null,
+  concessions_available_for: [] as ConcessionsTime[],
   water_access: null as WaterAccess | null,
   reviewer_note: '',
 }
 
 function formFromReview(r: Review): typeof defaultForm {
   return {
-    visit_date: r.visit_date ?? '',
     bathroom_cleanliness: r.bathroom_cleanliness ?? 0,
     diaper_changing_tables: r.diaper_changing_tables,
     soap_stocked: r.soap_stocked,
@@ -119,15 +145,16 @@ function formFromReview(r: Review): typeof defaultForm {
     concessions_onsite: r.concessions_onsite,
     free_admission: r.free_admission,
     ample_parking: r.ample_parking,
+    concessions_available_for: r.concessions_available_for ?? [],
     water_access: r.water_access,
     reviewer_note: r.reviewer_note ?? '',
   }
 }
 
-export default function RatingForm({ complexId, fields, initialFieldId = null, existingReview = null, onSubmit }: Props) {
+export default function RatingForm({ complexId, initialFieldId = null, existingReview = null, onSubmit }: Props) {
   const { user } = useAuth()
   const [form, setForm] = useState(existingReview ? formFromReview(existingReview) : defaultForm)
-  const [fieldId, setFieldId] = useState<string | null>(existingReview ? existingReview.field_id : initialFieldId)
+  const [fieldId] = useState<string | null>(existingReview ? existingReview.field_id : initialFieldId)
   const [anonymous, setAnonymous] = useState(existingReview?.is_anonymous ?? false)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
@@ -143,7 +170,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
           onClick={() => setShowAuth(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          Log in / create account
+          Log In / Create Account
         </button>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </div>
@@ -161,7 +188,6 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
       is_anonymous: anonymous,
     }
 
-    if (form.visit_date)              row.visit_date              = form.visit_date
     if (form.bathroom_cleanliness > 0) row.bathroom_cleanliness   = form.bathroom_cleanliness
     if (form.concessions_quality > 0)  row.concessions_quality    = form.concessions_quality
     if (form.concessions_value > 0)    row.concessions_value      = form.concessions_value
@@ -176,6 +202,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
     if (form.concessions_onsite !== null) row.concessions_onsite   = form.concessions_onsite
     if (form.free_admission !== null)  row.free_admission          = form.free_admission
     if (form.ample_parking !== null)   row.ample_parking           = form.ample_parking
+    if (form.concessions_available_for.length > 0) row.concessions_available_for = form.concessions_available_for
     if (form.shade_amount)             row.shade_amount            = form.shade_amount
     if (form.walkways_congestion)      row.walkways_congestion     = form.walkways_congestion
     if (form.water_access)             row.water_access            = form.water_access
@@ -205,62 +232,52 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
 
       <div className="bg-white rounded-lg border border-gray-200 px-4 py-1">
 
-        {/* Which field */}
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <span className="text-sm text-gray-700">Which field is this about?</span>
-          <select
-            value={fieldId ?? 'whole-complex'}
-            onChange={e => setFieldId(e.target.value === 'whole-complex' ? null : e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-2 py-1 bg-white max-w-[55%]"
-          >
-            <option value="whole-complex">Whole complex</option>
-            {fields.map(f => <option key={f.id} value={f.id}>{f.field_name}</option>)}
-          </select>
-        </div>
-
-        {/* Visit date */}
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <span className="text-sm text-gray-700">When did you visit?</span>
-          <input type="date" value={form.visit_date}
-            onChange={e => set({ visit_date: e.target.value })}
-            className="text-sm border border-gray-300 rounded px-2 py-0.5 text-gray-700"
-          />
-        </div>
-
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">Amenities</p>
-        <BoolPicker label="Concessions on-site" value={form.concessions_onsite} onChange={v => set({ concessions_onsite: v })} />
-        <BoolPicker label="Tents / canopies allowed" value={form.tents_allowed} onChange={v => set({ tents_allowed: v })} />
-        <BoolPicker label="Pets allowed" value={form.pets_allowed} onChange={v => set({ pets_allowed: v })} />
-        <BoolPicker label="Free admission" value={form.free_admission} onChange={v => set({ free_admission: v })} />
-        <BoolPicker label="Ample parking" value={form.ample_parking} onChange={v => set({ ample_parking: v })} />
-        <BoolPicker label="Protected from fly balls" value={form.covered_from_fly_balls} onChange={v => set({ covered_from_fly_balls: v })} />
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1 pb-1">Amenities</p>
+        <BoolPicker label="Concessions On-Site" value={form.concessions_onsite} onChange={v => set({ concessions_onsite: v })} />
+        <BoolPicker label="Tents / Canopies Allowed" value={form.tents_allowed} onChange={v => set({ tents_allowed: v })} />
+        <BoolPicker label="Pets Allowed" value={form.pets_allowed} onChange={v => set({ pets_allowed: v })} />
+        <BoolPicker label="Free Admission" value={form.free_admission} onChange={v => set({ free_admission: v })} />
+        <BoolPicker label="Ample Parking" value={form.ample_parking} onChange={v => set({ ample_parking: v })} />
+        <BoolPicker label="Protected From Fly Balls" value={form.covered_from_fly_balls} onChange={v => set({ covered_from_fly_balls: v })} />
 
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Bathrooms</p>
         <StarPicker label="Cleanliness" value={form.bathroom_cleanliness} onChange={v => set({ bathroom_cleanliness: v })} />
-        <BoolPicker label="Diaper changing tables" value={form.diaper_changing_tables} onChange={v => set({ diaper_changing_tables: v })} />
-        <BoolPicker label="Soap stocked" value={form.soap_stocked} onChange={v => set({ soap_stocked: v })} />
-        <BoolPicker label="Paper towels stocked" value={form.paper_towels_stocked} onChange={v => set({ paper_towels_stocked: v })} />
+        <BoolPicker label="Diaper Changing Tables" value={form.diaper_changing_tables} onChange={v => set({ diaper_changing_tables: v })} />
+        <BoolPicker label="Soap Stocked" value={form.soap_stocked} onChange={v => set({ soap_stocked: v })} />
+        <BoolPicker label="Paper Towels Stocked" value={form.paper_towels_stocked} onChange={v => set({ paper_towels_stocked: v })} />
 
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Concessions</p>
-        <StarPicker label="Food quality" value={form.concessions_quality} onChange={v => set({ concessions_quality: v })} />
-        <StarPicker label="Value for money" value={form.concessions_value} onChange={v => set({ concessions_value: v })} />
+        <StarPicker label="Food Quality" value={form.concessions_quality} onChange={v => set({ concessions_quality: v })} />
+        <StarPicker label="Value For Money" value={form.concessions_value} onChange={v => set({ concessions_value: v })} />
+        <MultiSelectPicker<ConcessionsTime>
+          label="Concessions Available For"
+          values={form.concessions_available_for}
+          onChange={v => set({ concessions_available_for: v })}
+          options={[
+            { value: 'breakfast', label: 'Breakfast' },
+            { value: 'lunch', label: 'Lunch' },
+            { value: 'dinner', label: 'Dinner' },
+            { value: 'select_times_only', label: 'Select Times Only' },
+          ]}
+        />
 
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Water</p>
         <SelectPicker<WaterAccess>
-          label="Water access"
+          label="Water Access"
           value={form.water_access}
           onChange={v => set({ water_access: v })}
           options={[
-            { value: 'purchase_only',      label: 'Purchase only' },
-            { value: 'fountains_marginal', label: 'Fountains (meh)' },
-            { value: 'fountains_good',     label: 'Fountains (good)' },
-            { value: 'bottle_filler',      label: 'Bottle filler' },
+            { value: 'purchase_only',      label: 'Purchase Only' },
+            { value: 'fountains_marginal', label: 'Drinking Fountain - Barely Working' },
+            { value: 'fountains_good',     label: 'Drinking Fountain - Good Condition' },
+            { value: 'bottle_filler',      label: 'Bottle Filler' },
+            { value: 'none',               label: 'None Available' },
           ]}
         />
 
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Seating &amp; Walkways</p>
-        <StarPicker label="Bleacher cleanliness" value={form.bleachers_cleanliness} onChange={v => set({ bleachers_cleanliness: v })} />
-        <BoolPicker label="Hard surface for chairs" value={form.cement_pad_for_chairs} onChange={v => set({ cement_pad_for_chairs: v })} />
+        <StarPicker label="Bleacher Cleanliness" value={form.bleachers_cleanliness} onChange={v => set({ bleachers_cleanliness: v })} />
+        <BoolPicker label="Hard Surface For Chairs" value={form.cement_pad_for_chairs} onChange={v => set({ cement_pad_for_chairs: v })} />
         <SelectPicker<ShadeAmount>
           label="Shade"
           value={form.shade_amount}
@@ -273,7 +290,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
           ]}
         />
         <SelectPicker<WalkwaysCongestion>
-          label="Walkway congestion"
+          label="Walkway Congestion"
           value={form.walkways_congestion}
           onChange={v => set({ walkways_congestion: v })}
           options={[
@@ -283,7 +300,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
           ]}
         />
 
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Tip for other parents</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Tip For Other Parents</p>
         <textarea
           value={form.reviewer_note}
           onChange={e => set({ reviewer_note: e.target.value })}
@@ -309,7 +326,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, e
         disabled={saving}
         className="mt-3 w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
       >
-        {saving ? 'Saving…' : existingReview ? 'Save changes' : 'Submit visit report'}
+        {saving ? 'Saving…' : existingReview ? 'Save Changes' : 'Submit Visit Report'}
       </button>
     </div>
   )

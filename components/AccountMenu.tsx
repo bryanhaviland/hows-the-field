@@ -80,7 +80,7 @@ export default function AccountMenu() {
             onClick={() => setShowAuth(true)}
             className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors"
           >
-            Log in
+            Log In
           </button>
         )}
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
@@ -112,7 +112,7 @@ export default function AccountMenu() {
 
           <div className="border-t border-gray-100 mt-3 pt-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-              Which fields do you want to see?
+              Which Fields Do You Want To See?
             </p>
             <SportTypeMultiSelect selected={profile.preferred_sports} onToggle={toggleSport} size={18} />
             <p className="text-xs text-gray-400 mt-2">Sets your default filter on the search page.</p>
@@ -123,7 +123,7 @@ export default function AccountMenu() {
               onClick={() => { setOpen(false); signOut() }}
               className="w-full text-left text-gray-600 hover:text-gray-900"
             >
-              Log out
+              Log Out
             </button>
 
             {!confirmingDelete ? (
@@ -131,7 +131,7 @@ export default function AccountMenu() {
                 onClick={() => setConfirmingDelete(true)}
                 className="w-full text-left text-red-600 hover:text-red-700"
               >
-                Remove my data
+                Remove My Data
               </button>
             ) : (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
@@ -145,7 +145,7 @@ export default function AccountMenu() {
                     disabled={deleting}
                     className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors"
                   >
-                    {deleting ? 'Deleting…' : 'Yes, delete everything'}
+                    {deleting ? 'Deleting…' : 'Yes, Delete Everything'}
                   </button>
                   <button
                     onClick={() => setConfirmingDelete(false)}

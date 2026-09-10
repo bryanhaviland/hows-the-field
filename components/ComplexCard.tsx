@@ -25,10 +25,11 @@ function RatingDots({ value }: { value: number | null }) {
 }
 
 const waterLabel: Record<string, string> = {
-  purchase_only: 'Purchase only',
-  fountains_marginal: 'Fountains (marginal)',
-  fountains_good: 'Fountains (good)',
-  bottle_filler: 'Bottle filler',
+  purchase_only: 'Purchase Only',
+  fountains_marginal: 'Drinking Fountain - Barely Working',
+  fountains_good: 'Drinking Fountain - Good Condition',
+  bottle_filler: 'Bottle Filler',
+  none: 'None Available',
 }
 
 const shadeLabel: Record<string, string> = {

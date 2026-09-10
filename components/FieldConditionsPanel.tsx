@@ -26,14 +26,14 @@ const FIELD_CONDITION_META: Record<FieldConditionValue, { label: string; color: 
 }
 
 const PARKING_META: Record<ParkingStatus, { label: string; color: 'green' | 'amber' | 'red' }> = {
-  lots_of_space: { label: 'Lots of space', color: 'green' },
+  lots_of_space: { label: 'Lots Of Space', color: 'green' },
   crowded: { label: 'Crowded', color: 'red' },
 }
 
 const GAMES_META: Record<GamesStatus, { label: string; color: 'green' | 'amber' | 'red' }> = {
-  ahead_of_schedule: { label: 'Ahead of schedule', color: 'green' },
-  on_time: { label: 'Right on time', color: 'green' },
-  running_behind: { label: 'Running behind', color: 'red' },
+  ahead_of_schedule: { label: 'Ahead Of Schedule', color: 'green' },
+  on_time: { label: 'Right On Time', color: 'green' },
+  running_behind: { label: 'Running Behind', color: 'red' },
 }
 
 export default function FieldConditionsPanel({ complex, fields }: { complex: FieldComplex; fields: Field[] }) {

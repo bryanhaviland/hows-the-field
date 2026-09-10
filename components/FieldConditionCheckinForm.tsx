@@ -114,7 +114,7 @@ export default function FieldConditionCheckinForm({ complexId, fields, onSubmit,
           onChange={setParking}
           options={[
             { value: 'crowded', label: 'Crowded' },
-            { value: 'lots_of_space', label: 'Lots of space' },
+            { value: 'lots_of_space', label: 'Lots Of Space' },
           ]}
         />
       </div>
@@ -127,9 +127,9 @@ export default function FieldConditionCheckinForm({ complexId, fields, onSubmit,
           value={gamesStatus}
           onChange={setGamesStatus}
           options={[
-            { value: 'ahead_of_schedule', label: 'Ahead of schedule' },
-            { value: 'on_time', label: 'Right on time' },
-            { value: 'running_behind', label: 'Running behind' },
+            { value: 'ahead_of_schedule', label: 'Ahead Of Schedule' },
+            { value: 'on_time', label: 'Right On Time' },
+            { value: 'running_behind', label: 'Running Behind' },
           ]}
         />
       </div>

@@ -42,7 +42,7 @@ export default function SearchFilters({ filters, onChange, cities, states }: Pro
             value={filters.state}
             onChange={e => set({ state: e.target.value, city: 'all' })}
           >
-            <option value="all">All states</option>
+            <option value="all">All States</option>
             {states.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
@@ -53,7 +53,7 @@ export default function SearchFilters({ filters, onChange, cities, states }: Pro
             value={filters.city}
             onChange={e => set({ city: e.target.value })}
           >
-            <option value="all">All cities</option>
+            <option value="all">All Cities</option>
             {cities.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>

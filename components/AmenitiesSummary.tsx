@@ -30,12 +30,12 @@ function AmenityPct({ label, pct }: { label: string; pct: number | null }) {
 export default function AmenitiesSummary({ summary: s }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-      <AmenityPct label="Concessions on-site" pct={s?.pct_concessions_onsite ?? null} />
-      <AmenityPct label="Tents allowed" pct={s?.pct_tents_allowed ?? null} />
-      <AmenityPct label="Pets allowed" pct={s?.pct_pets_allowed ?? null} />
-      <AmenityPct label="Free admission" pct={s?.pct_free_admission ?? null} />
-      <AmenityPct label="Ample parking" pct={s?.pct_ample_parking ?? null} />
-      <AmenityPct label="Protected from fly balls" pct={s?.pct_fly_ball_cover ?? null} />
+      <AmenityPct label="Concessions On-Site" pct={s?.pct_concessions_onsite ?? null} />
+      <AmenityPct label="Tents Allowed" pct={s?.pct_tents_allowed ?? null} />
+      <AmenityPct label="Pets Allowed" pct={s?.pct_pets_allowed ?? null} />
+      <AmenityPct label="Free Admission" pct={s?.pct_free_admission ?? null} />
+      <AmenityPct label="Ample Parking" pct={s?.pct_ample_parking ?? null} />
+      <AmenityPct label="Protected From Fly Balls" pct={s?.pct_fly_ball_cover ?? null} />
     </div>
   )
 }
