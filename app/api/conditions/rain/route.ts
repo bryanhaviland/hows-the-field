@@ -5,10 +5,20 @@ import { gridKey } from '@/lib/geo'
 import { resolveComplexLocation } from '@/lib/complex-location'
 import type { RainForecast } from '@/lib/supabase'
 
-// Forecasts don't change minute to minute — a 30 min cache is plenty and
-// keeps this well inside Open-Meteo's free non-commercial usage.
+// The hourly forecast doesn't change minute to minute — a 30 min cache is
+// plenty and keeps this well inside Open-Meteo's free non-commercial usage.
+// When it's actually raining right now, though, we re-check much sooner
+// (5 min) so the panel clears promptly once a pop-up storm passes —
+// exactly the kind of small, localized cell that Florida afternoons throw
+// out and that a broad hourly-probability forecast alone can miss or lag.
 const POLL_SECONDS = 30 * 60
+const RAINING_NOW_POLL_SECONDS = 5 * 60
 const RAIN_PROBABILITY_THRESHOLD = 40 // %
+
+// WMO weather codes (https://open-meteo.com/en/docs) that mean rain is
+// actually falling — drizzle, rain, freezing rain, rain showers, and
+// thunderstorms. Snow-only codes are deliberately excluded.
+const RAIN_WEATHER_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99])
 
 export async function OPTIONS(req: NextRequest) {
   return corsPreflight(req)
@@ -48,6 +58,7 @@ export async function GET(req: NextRequest) {
     const url = new URL('https://api.open-meteo.com/v1/forecast')
     url.searchParams.set('latitude', String(location.latitude))
     url.searchParams.set('longitude', String(location.longitude))
+    url.searchParams.set('current', 'precipitation,weather_code')
     url.searchParams.set('hourly', 'precipitation_probability,precipitation')
     url.searchParams.set('forecast_days', '1')
     url.searchParams.set('timezone', 'auto')
@@ -65,9 +76,14 @@ export async function GET(req: NextRequest) {
       precipitation: amounts[i] ?? 0,
     }))
 
-    const headline = buildHeadline(hourly)
+    const currentPrecip: number = json?.current?.precipitation ?? 0
+    const currentCode: number | null = json?.current?.weather_code ?? null
+    const isRainingNow = currentPrecip > 0 || (currentCode !== null && RAIN_WEATHER_CODES.has(currentCode))
+
+    const headline = isRainingNow ? 'Raining now' : buildHeadline(hourly)
+    const pollSeconds = isRainingNow ? RAINING_NOW_POLL_SECONDS : POLL_SECONDS
     const fetchedAt = new Date().toISOString()
-    const nextPollAt = new Date(now + POLL_SECONDS * 1000).toISOString()
+    const nextPollAt = new Date(now + pollSeconds * 1000).toISOString()
 
     await admin.from('rain_forecast_cache').upsert({
       grid_key: key,
@@ -80,7 +96,7 @@ export async function GET(req: NextRequest) {
     return corsJson(req, {
       headline,
       hourly,
-      pollIntervalSeconds: POLL_SECONDS,
+      pollIntervalSeconds: pollSeconds,
       source: 'live',
     } satisfies RainForecast)
   } catch (err) {
