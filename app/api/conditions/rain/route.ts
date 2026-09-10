@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { corsJson, corsPreflight } from '@/lib/cors'
 import { gridKey } from '@/lib/geo'
 import { resolveComplexLocation } from '@/lib/complex-location'
 import type { RainForecast } from '@/lib/supabase'
@@ -9,16 +10,20 @@ import type { RainForecast } from '@/lib/supabase'
 const POLL_SECONDS = 30 * 60
 const RAIN_PROBABILITY_THRESHOLD = 40 // %
 
+export async function OPTIONS(req: NextRequest) {
+  return corsPreflight(req)
+}
+
 export async function GET(req: NextRequest) {
   const complexId = req.nextUrl.searchParams.get('complexId')
   if (!complexId) {
-    return NextResponse.json({ error: 'complexId is required' }, { status: 400 })
+    return corsJson(req, { error: 'complexId is required' }, { status: 400 })
   }
 
   const admin = supabaseAdmin()
   const location = await resolveComplexLocation(complexId)
   if (!location) {
-    return NextResponse.json(emptyForecast('live'))
+    return corsJson(req, emptyForecast('live'))
   }
 
   const key = gridKey(location.latitude, location.longitude)
@@ -31,7 +36,7 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
 
   if (cached && new Date(cached.next_poll_at).getTime() > now) {
-    return NextResponse.json({
+    return corsJson(req, {
       headline: cached.headline ?? 'No rain expected today',
       hourly: cached.hourly ?? [],
       pollIntervalSeconds: Math.max(60, Math.round((new Date(cached.next_poll_at).getTime() - now) / 1000)),
@@ -72,7 +77,7 @@ export async function GET(req: NextRequest) {
       next_poll_at: nextPollAt,
     })
 
-    return NextResponse.json({
+    return corsJson(req, {
       headline,
       hourly,
       pollIntervalSeconds: POLL_SECONDS,
@@ -80,7 +85,7 @@ export async function GET(req: NextRequest) {
     } satisfies RainForecast)
   } catch (err) {
     console.error('[rain] Open-Meteo fetch failed', err)
-    return NextResponse.json(emptyForecast('live'))
+    return corsJson(req, emptyForecast('live'))
   }
 }
 

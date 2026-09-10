@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { corsJson, corsPreflight } from '@/lib/cors'
 import { verifyAddress, checkAthleticFieldNearby } from '@/lib/geo'
 
 const ALLOWED_SPORTS = ['baseball', 'softball', 'both', 'soccer', 'flag_football']
@@ -16,23 +17,27 @@ const ALLOWED_SPORTS = ['baseball', 'softball', 'both', 'soccer', 'flag_football
  * invisible to public reads (see the "Public can read verified
  * field_complexes" RLS policy) until an admin flips is_verified.
  */
+export async function OPTIONS(req: NextRequest) {
+  return corsPreflight(req)
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization') ?? ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
   if (!token) {
-    return NextResponse.json({ error: 'Log in to submit a complex.' }, { status: 401 })
+    return corsJson(req, { error: 'Log in to submit a complex.' }, { status: 401 })
   }
 
   const admin = supabaseAdmin()
   const { data: userData, error: userErr } = await admin.auth.getUser(token)
   if (userErr || !userData?.user) {
-    return NextResponse.json({ error: 'Your session has expired — log in again.' }, { status: 401 })
+    return corsJson(req, { error: 'Your session has expired — log in again.' }, { status: 401 })
   }
   const user = userData.user
 
   const body = await req.json().catch(() => null)
   if (!body) {
-    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
+    return corsJson(req, { error: 'Invalid request.' }, { status: 400 })
   }
 
   const name = String(body.name ?? '').trim()
@@ -48,15 +53,15 @@ export async function POST(req: NextRequest) {
       : null
 
   if (!name || !address || !city) {
-    return NextResponse.json({ error: 'Name, address, and city are required.' }, { status: 400 })
+    return corsJson(req, { error: 'Name, address, and city are required.' }, { status: 400 })
   }
   if (!ALLOWED_SPORTS.includes(sportType)) {
-    return NextResponse.json({ error: 'Pick a valid sport.' }, { status: 400 })
+    return corsJson(req, { error: 'Pick a valid sport.' }, { status: 400 })
   }
 
   const verification = await verifyAddress({ address, city, state, zip })
   if (!verification.ok) {
-    return NextResponse.json({ error: verification.reason }, { status: 422 })
+    return corsJson(req, { error: verification.reason }, { status: 422 })
   }
 
   const fieldCheck = await checkAthleticFieldNearby(verification.latitude, verification.longitude)
@@ -87,10 +92,10 @@ export async function POST(req: NextRequest) {
 
   if (insertErr) {
     console.error('[complexes/submit] insert failed', insertErr)
-    return NextResponse.json({ error: 'Something went wrong saving that — try again.' }, { status: 500 })
+    return corsJson(req, { error: 'Something went wrong saving that — try again.' }, { status: 500 })
   }
 
-  return NextResponse.json({
+  return corsJson(req, {
     ok: true,
     id: inserted.id,
     formattedAddress: verification.formattedAddress,

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { corsJson, corsPreflight } from '@/lib/cors'
 
 /**
  * "Remove my data" from the profile menu — required by App Store/Play Store
@@ -11,17 +12,21 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  * user_id cleared and is_anonymous set true — before the account itself,
  * their saved complexes, and their profile row are deleted.
  */
+export async function OPTIONS(req: NextRequest) {
+  return corsPreflight(req)
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization') ?? ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
   if (!token) {
-    return NextResponse.json({ error: 'Log in to manage your account.' }, { status: 401 })
+    return corsJson(req, { error: 'Log in to manage your account.' }, { status: 401 })
   }
 
   const admin = supabaseAdmin()
   const { data: userData, error: userErr } = await admin.auth.getUser(token)
   if (userErr || !userData?.user) {
-    return NextResponse.json({ error: 'Your session has expired — log in again.' }, { status: 401 })
+    return corsJson(req, { error: 'Your session has expired — log in again.' }, { status: 401 })
   }
   const userId = userData.user.id
 
@@ -31,7 +36,7 @@ export async function POST(req: NextRequest) {
     .eq('user_id', userId)
   if (anonymizeErr) {
     console.error('[account/delete] anonymize reviews failed', anonymizeErr)
-    return NextResponse.json({ error: 'Something went wrong — try again.' }, { status: 500 })
+    return corsJson(req, { error: 'Something went wrong — try again.' }, { status: 500 })
   }
 
   await admin.from('saved_complexes').delete().eq('user_id', userId)
@@ -40,8 +45,8 @@ export async function POST(req: NextRequest) {
   const { error: deleteErr } = await admin.auth.admin.deleteUser(userId)
   if (deleteErr) {
     console.error('[account/delete] deleteUser failed', deleteErr)
-    return NextResponse.json({ error: 'Something went wrong — try again.' }, { status: 500 })
+    return corsJson(req, { error: 'Something went wrong — try again.' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return corsJson(req, { ok: true })
 }
