@@ -3,14 +3,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.howsthefield.app',
   appName: "How's the Field?",
-  webDir: 'www',
-  // The native shell always loads the live site, so new complexes/reviews show up
-  // instantly with no app-store rebuild. www/index.html above is only a same-origin
-  // placeholder Capacitor's tooling wants on disk — it's never actually shown.
-  server: {
-    url: 'https://howsthefield.com',
-    cleartext: false,
-  },
+  // The app bundles its own UI (built via `npm run cap:build`, which writes
+  // a static export to out/) instead of loading the live site remotely —
+  // it's a standalone app that talks to the same Supabase/API backend as
+  // the website, not a wrapped browser view of howsthefield.com.
+  webDir: 'out',
   plugins: {
     SplashScreen: {
       launchShowDuration: 700,

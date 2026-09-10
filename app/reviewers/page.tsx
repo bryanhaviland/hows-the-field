@@ -39,7 +39,7 @@ export default function ReviewersPage() {
           {reviewers.map(r => (
             <Link
               key={r.user_id}
-              href={`/reviewers/${r.user_id}`}
+              href={`/reviewers/profile?id=${r.user_id}`}
               className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 transition-colors"
             >
               <div>

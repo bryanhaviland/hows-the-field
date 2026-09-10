@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "43173919155",
+    "project_id": "hows-the-field-263a7",
+    "storage_bucket": "hows-the-field-263a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:43173919155:android:da0e73765aa1f42afdb3c6",
+        "android_client_info": {
+          "package_name": "com.howsthefield.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCic3op0TlSyeAeklCdpjeG5vhJFK780Qw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

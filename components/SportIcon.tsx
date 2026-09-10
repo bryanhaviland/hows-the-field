@@ -50,14 +50,20 @@ function SoftballBall({ size }: { size: number }) {
 function SoccerBall({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9.5" fill="#FFFFFF" stroke="#111827" strokeWidth="1" />
-      <polygon points="12,7.3 15.1,9.6 14,13.2 10,13.2 8.9,9.6" fill="#111827" />
+      <circle cx="12" cy="12" r="9.5" fill="#FFFFFF" stroke="#111827" strokeWidth="1.2" />
+      <polygon points="12,7.5 16.28,10.61 14.65,15.64 9.36,15.64 7.72,10.61" fill="#111827" />
       <path
-        d="M12,7.3 L11.3,3.2 M15.1,9.6 L18.9,8.1 M14,13.2 L16.3,16.7 M10,13.2 L7.7,16.7 M8.9,9.6 L5.1,8.1"
+        d="M12,7.5 L12,3.5 M16.28,10.61 L20.08,9.37 M14.65,15.64 L17.0,18.88 M9.36,15.64 L7.0,18.88 M7.72,10.61 L3.92,9.37"
         stroke="#111827"
-        strokeWidth="1"
+        strokeWidth="1.3"
+        strokeLinecap="round"
         fill="none"
       />
+      <circle cx="12" cy="3.5" r="1.1" fill="#111827" />
+      <circle cx="20.08" cy="9.37" r="1.1" fill="#111827" />
+      <circle cx="17.0" cy="18.88" r="1.1" fill="#111827" />
+      <circle cx="7.0" cy="18.88" r="1.1" fill="#111827" />
+      <circle cx="3.92" cy="9.37" r="1.1" fill="#111827" />
     </svg>
   )
 }

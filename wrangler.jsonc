@@ -1,0 +1,17 @@
+{
+  "name": "hows-the-field",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "worker.ts",
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    { "pattern": "howsthefield.com", "custom_domain": true },
+    { "pattern": "www.howsthefield.com", "custom_domain": true }
+  ]
+}

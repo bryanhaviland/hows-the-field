@@ -42,6 +42,11 @@ const waterLabel: Record<string, string> = {
   bottle_filler: 'Bottle filler',
 }
 
+/**
+ * The rest of what parents report, beyond the 6 core amenities that always
+ * show on the main screen (see AmenitiesSummary) — tucked behind a "see
+ * full crowd-sourced report" toggle on the complex detail page.
+ */
 export default function CrowdRatings({ summary: s }: Props) {
   return (
     <div className="space-y-1">
@@ -71,9 +76,6 @@ export default function CrowdRatings({ summary: s }: Props) {
       <PctRow label="Soap stocked"           pct={s.pct_soap_stocked} />
       <PctRow label="Paper towels stocked"   pct={s.pct_paper_towels} />
       <PctRow label="Hard surface for chairs" pct={s.pct_cement_pad} />
-      <PctRow label="Protected from fly balls" pct={s.pct_fly_ball_cover} />
-      <PctRow label="Tents / canopies allowed" pct={s.pct_tents_allowed} />
-      <PctRow label="Pets allowed"            pct={s.pct_pets_allowed} />
 
       {/* Categoricals */}
       {s.mode_water_access && (

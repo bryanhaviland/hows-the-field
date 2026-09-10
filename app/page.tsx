@@ -1,53 +1,62 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase, FieldComplex } from '@/lib/supabase'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { supabase, FieldComplex, RatingsSummary } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 import ComplexCard from '@/components/ComplexCard'
 import SearchFilters from '@/components/SearchFilters'
 
 export interface Filters {
   search: string
-  sport: string
+  /** Selected sport types (SportType values, minus 'both'). Empty = all sports. */
+  sport: string[]
   city: string
   state: string
-  concessions: boolean
-  tents: boolean
-  pets: boolean
-  freeAdmission: boolean
-  parking: boolean
-  flyBallCover: boolean
 }
 
 const defaultFilters: Filters = {
   search: '',
-  sport: 'all',
+  sport: [],
   city: 'all',
   state: 'all',
-  concessions: false,
-  tents: false,
-  pets: false,
-  freeAdmission: false,
-  parking: false,
-  flyBallCover: false,
 }
 
 export default function HomePage() {
+  const { profile } = useAuth()
   const [complexes, setComplexes] = useState<FieldComplex[]>([])
+  const [summaries, setSummaries] = useState<Record<string, RatingsSummary>>({})
   const [filtered, setFiltered] = useState<FieldComplex[]>([])
   const [filters, setFilters] = useState<Filters>(defaultFilters)
   const [loading, setLoading] = useState(true)
+  const appliedPreference = useRef(false)
 
   useEffect(() => {
-    supabase
-      .from('field_complexes')
-      .select('*')
-      .order('city')
-      .then(({ data }) => {
-        setComplexes(data ?? [])
-        setFiltered(data ?? [])
-        setLoading(false)
-      })
+    Promise.all([
+      supabase.from('field_complexes').select('*').order('city'),
+      // Every amenity/rating shown in search is crowdsourced — nobody picks
+      // which field they play at, so admin-set columns never belong here.
+      supabase.from('complex_ratings_summary').select('*'),
+    ]).then(([{ data: complexData }, { data: summaryData }]) => {
+      setComplexes(complexData ?? [])
+      setFiltered(complexData ?? [])
+      const map: Record<string, RatingsSummary> = {}
+      for (const s of summaryData ?? []) map[s.complex_id] = s
+      setSummaries(map)
+      setLoading(false)
+    })
   }, [])
+
+  // Default the sport filter to the user's saved field-type preference (profile
+  // menu → "Which fields do you want to see?"), once, the first time it loads —
+  // never overriding a filter the user has already changed this session.
+  useEffect(() => {
+    if (appliedPreference.current) return
+    if (profile && profile.preferred_sports.length > 0) {
+      appliedPreference.current = true
+      setFilters(f => ({ ...f, sport: profile.preferred_sports }))
+    }
+  }, [profile])
 
   useEffect(() => {
     let results = [...complexes]
@@ -55,15 +64,11 @@ export default function HomePage() {
       const q = filters.search.trim().toLowerCase()
       results = results.filter(c => c.name.toLowerCase().includes(q))
     }
-    if (filters.sport !== 'all') results = results.filter(c => c.sport_type === filters.sport || c.sport_type === 'both')
+    if (filters.sport.length > 0) {
+      results = results.filter(c => c.sport_type === 'both' || filters.sport.includes(c.sport_type))
+    }
     if (filters.state !== 'all') results = results.filter(c => c.state === filters.state)
     if (filters.city !== 'all') results = results.filter(c => c.city === filters.city)
-    if (filters.concessions) results = results.filter(c => c.concessions_onsite === true)
-    if (filters.tents) results = results.filter(c => c.tents_allowed === true)
-    if (filters.pets) results = results.filter(c => c.pets_allowed === true)
-    if (filters.freeAdmission) results = results.filter(c => c.free_admission === true)
-    if (filters.parking) results = results.filter(c => c.ample_parking === true)
-    if (filters.flyBallCover) results = results.filter(c => c.covered_from_fly_balls === true)
     setFiltered(results)
   }, [filters, complexes])
 
@@ -78,9 +83,17 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Find a Complex</h1>
-        <p className="text-gray-500 mt-1 text-sm">Know before you load the car.</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Find a Complex</h1>
+          <p className="text-gray-500 mt-1 text-sm">Know before you load the car.</p>
+        </div>
+        <Link
+          href="/submit-complex"
+          className="shrink-0 text-sm text-blue-600 hover:underline whitespace-nowrap mt-1"
+        >
+          + Add a complex
+        </Link>
       </div>
 
       <SearchFilters filters={filters} onChange={setFilters} cities={cities} states={states} />
@@ -91,7 +104,7 @@ export default function HomePage() {
         <div className="text-center py-16 text-gray-400">No complexes match your filters.</div>
       ) : (
         <div className="grid gap-4 mt-6 sm:grid-cols-2">
-          {filtered.map(c => <ComplexCard key={c.id} complex={c} />)}
+          {filtered.map(c => <ComplexCard key={c.id} complex={c} summary={summaries[c.id] ?? null} />)}
         </div>
       )}
     </div>

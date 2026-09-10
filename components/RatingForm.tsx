@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess, Field } from '@/lib/supabase'
+import { supabase, ShadeAmount, WalkwaysCongestion, WaterAccess, Field, Review } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import AuthModal from '@/components/AuthModal'
 
@@ -10,10 +10,12 @@ interface Props {
   fields: Field[]
   /** Pre-select a specific field, e.g. when the user clicked "leave a note" on that field. */
   initialFieldId?: string | null
+  /** The current user's own existing review, when they're editing it rather than filing a new visit report. */
+  existingReview?: Review | null
   onSubmit: () => void
 }
 
-function StarPicker({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
+export function StarPicker({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-100">
       <span className="text-sm text-gray-700">{label}</span>
@@ -29,7 +31,7 @@ function StarPicker({ label, value, onChange }: { label: string; value: number; 
   )
 }
 
-function BoolPicker({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean) => void }) {
+export function BoolPicker({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-100">
       <span className="text-sm text-gray-700">{label}</span>
@@ -49,7 +51,7 @@ function BoolPicker({ label, value, onChange }: { label: string; value: boolean 
   )
 }
 
-function SelectPicker<T extends string>({
+export function SelectPicker<T extends string>({
   label, value, onChange, options
 }: {
   label: string
@@ -91,15 +93,42 @@ const defaultForm = {
   covered_from_fly_balls: null as boolean | null,
   tents_allowed: null as boolean | null,
   pets_allowed: null as boolean | null,
+  concessions_onsite: null as boolean | null,
+  free_admission: null as boolean | null,
+  ample_parking: null as boolean | null,
   water_access: null as WaterAccess | null,
   reviewer_note: '',
 }
 
-export default function RatingForm({ complexId, fields, initialFieldId = null, onSubmit }: Props) {
+function formFromReview(r: Review): typeof defaultForm {
+  return {
+    visit_date: r.visit_date ?? '',
+    bathroom_cleanliness: r.bathroom_cleanliness ?? 0,
+    diaper_changing_tables: r.diaper_changing_tables,
+    soap_stocked: r.soap_stocked,
+    paper_towels_stocked: r.paper_towels_stocked,
+    concessions_quality: r.concessions_quality ?? 0,
+    concessions_value: r.concessions_value ?? 0,
+    bleachers_cleanliness: r.bleachers_cleanliness ?? 0,
+    cement_pad_for_chairs: r.cement_pad_for_chairs,
+    shade_amount: r.shade_amount,
+    walkways_congestion: r.walkways_congestion,
+    covered_from_fly_balls: r.covered_from_fly_balls,
+    tents_allowed: r.tents_allowed,
+    pets_allowed: r.pets_allowed,
+    concessions_onsite: r.concessions_onsite,
+    free_admission: r.free_admission,
+    ample_parking: r.ample_parking,
+    water_access: r.water_access,
+    reviewer_note: r.reviewer_note ?? '',
+  }
+}
+
+export default function RatingForm({ complexId, fields, initialFieldId = null, existingReview = null, onSubmit }: Props) {
   const { user } = useAuth()
-  const [form, setForm] = useState(defaultForm)
-  const [fieldId, setFieldId] = useState<string | null>(initialFieldId)
-  const [anonymous, setAnonymous] = useState(false)
+  const [form, setForm] = useState(existingReview ? formFromReview(existingReview) : defaultForm)
+  const [fieldId, setFieldId] = useState<string | null>(existingReview ? existingReview.field_id : initialFieldId)
+  const [anonymous, setAnonymous] = useState(existingReview?.is_anonymous ?? false)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -124,7 +153,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
   const handleSubmit = async () => {
     setSaving(true)
 
-    // Build the insert — only include fields the user actually touched
+    // Build the insert/update — only include fields the user actually touched
     const row: Record<string, unknown> = {
       complex_id: complexId,
       field_id: fieldId,
@@ -144,12 +173,19 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
     if (form.covered_from_fly_balls !== null) row.covered_from_fly_balls = form.covered_from_fly_balls
     if (form.tents_allowed !== null)   row.tents_allowed           = form.tents_allowed
     if (form.pets_allowed !== null)    row.pets_allowed            = form.pets_allowed
+    if (form.concessions_onsite !== null) row.concessions_onsite   = form.concessions_onsite
+    if (form.free_admission !== null)  row.free_admission          = form.free_admission
+    if (form.ample_parking !== null)   row.ample_parking           = form.ample_parking
     if (form.shade_amount)             row.shade_amount            = form.shade_amount
     if (form.walkways_congestion)      row.walkways_congestion     = form.walkways_congestion
     if (form.water_access)             row.water_access            = form.water_access
     if (form.reviewer_note.trim())     row.reviewer_note           = form.reviewer_note.trim()
 
-    await supabase.from('reviews').insert(row)
+    if (existingReview) {
+      await supabase.from('reviews').update(row).eq('id', existingReview.id)
+    } else {
+      await supabase.from('reviews').insert(row)
+    }
     setSaving(false)
     setDone(true)
     setTimeout(onSubmit, 1800)
@@ -191,7 +227,15 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
           />
         </div>
 
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">Bathrooms</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">Amenities</p>
+        <BoolPicker label="Concessions on-site" value={form.concessions_onsite} onChange={v => set({ concessions_onsite: v })} />
+        <BoolPicker label="Tents / canopies allowed" value={form.tents_allowed} onChange={v => set({ tents_allowed: v })} />
+        <BoolPicker label="Pets allowed" value={form.pets_allowed} onChange={v => set({ pets_allowed: v })} />
+        <BoolPicker label="Free admission" value={form.free_admission} onChange={v => set({ free_admission: v })} />
+        <BoolPicker label="Ample parking" value={form.ample_parking} onChange={v => set({ ample_parking: v })} />
+        <BoolPicker label="Protected from fly balls" value={form.covered_from_fly_balls} onChange={v => set({ covered_from_fly_balls: v })} />
+
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Bathrooms</p>
         <StarPicker label="Cleanliness" value={form.bathroom_cleanliness} onChange={v => set({ bathroom_cleanliness: v })} />
         <BoolPicker label="Diaper changing tables" value={form.diaper_changing_tables} onChange={v => set({ diaper_changing_tables: v })} />
         <BoolPicker label="Soap stocked" value={form.soap_stocked} onChange={v => set({ soap_stocked: v })} />
@@ -239,11 +283,6 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
           ]}
         />
 
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Safety &amp; Policies</p>
-        <BoolPicker label="Protected from fly balls" value={form.covered_from_fly_balls} onChange={v => set({ covered_from_fly_balls: v })} />
-        <BoolPicker label="Tents / canopies allowed" value={form.tents_allowed} onChange={v => set({ tents_allowed: v })} />
-        <BoolPicker label="Pets allowed" value={form.pets_allowed} onChange={v => set({ pets_allowed: v })} />
-
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-4 pb-1">Tip for other parents</p>
         <textarea
           value={form.reviewer_note}
@@ -270,7 +309,7 @@ export default function RatingForm({ complexId, fields, initialFieldId = null, o
         disabled={saving}
         className="mt-3 w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
       >
-        {saving ? 'Saving…' : 'Submit visit report'}
+        {saving ? 'Saving…' : existingReview ? 'Save changes' : 'Submit visit report'}
       </button>
     </div>
   )

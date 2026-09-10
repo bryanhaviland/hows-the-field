@@ -15,6 +15,9 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   completeProfile: (displayName: string) => Promise<{ error: string | null }>
+  updatePreferredSports: (sports: string[]) => Promise<{ error: string | null }>
+  /** Permanently deletes the account and its personal data (App Store / Play Store required feature). Signs the user out on success. */
+  deleteAccount: () => Promise<{ error: string | null }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -98,6 +101,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  const updatePreferredSports = async (sports: string[]) => {
+    if (!session?.user) return { error: 'Not logged in' }
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ preferred_sports: sports })
+      .eq('id', session.user.id)
+      .select()
+      .single()
+    if (error) return { error: error.message }
+    setProfile(data)
+    return { error: null }
+  }
+
+  const deleteAccount = async () => {
+    if (!session?.access_token) return { error: 'Not logged in' }
+    try {
+      const res = await fetch('https://howsthefield.com/api/account/delete', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) return { error: data.error ?? 'Something went wrong — try again.' }
+      await supabase.auth.signOut()
+      return { error: null }
+    } catch {
+      return { error: 'Could not reach the server — check your connection and try again.' }
+    }
+  }
+
   const completeProfile = async (displayName: string) => {
     if (!session?.user) return { error: 'Not logged in' }
     const { data, error } = await supabase
@@ -120,6 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     completeProfile,
+    updatePreferredSports,
+    deleteAccount,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

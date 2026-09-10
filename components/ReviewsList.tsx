@@ -99,7 +99,7 @@ export default function ReviewsList({ reviews, complexes, emptyMessage = 'No rep
           <div key={r.id} className="py-3">
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               {r.reviewer_display_name ? (
-                <Link href={`/reviewers/${r.user_id}`} className="text-sm font-semibold text-gray-800 hover:text-blue-700">
+                <Link href={`/reviewers/profile?id=${r.user_id}`} className="text-sm font-semibold text-gray-800 hover:text-blue-700">
                   {r.reviewer_display_name}
                 </Link>
               ) : (
@@ -115,7 +115,7 @@ export default function ReviewsList({ reviews, complexes, emptyMessage = 'No rep
             </div>
 
             {complex && (
-              <Link href={`/complex/${r.complex_id}`} className="text-xs text-blue-600 hover:underline">
+              <Link href={`/complex?id=${r.complex_id}`} className="text-xs text-blue-600 hover:underline">
                 {complex.name} — {complex.city}, {complex.state}
               </Link>
             )}

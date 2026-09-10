@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, ReviewerStats, ReviewWithReviewer } from '@/lib/supabase'
 import ReviewerBadge from '@/components/ReviewerBadge'
@@ -13,14 +13,19 @@ interface ComplexInfo {
   state: string
 }
 
-export default function ReviewerProfile() {
-  const { id } = useParams<{ id: string }>()
+function ReviewerProfileInner() {
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id')
   const [stats, setStats] = useState<ReviewerStats | null>(null)
   const [reviews, setReviews] = useState<ReviewWithReviewer[]>([])
   const [complexes, setComplexes] = useState<Record<string, ComplexInfo>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
     let active = true
 
     Promise.all([
@@ -81,5 +86,13 @@ export default function ReviewerProfile() {
         <ReviewsList reviews={reviews} complexes={complexes} emptyMessage="No reports submitted yet." />
       </div>
     </div>
+  )
+}
+
+export default function ReviewerProfile() {
+  return (
+    <Suspense fallback={<div className="text-center py-16 text-gray-400">Loading…</div>}>
+      <ReviewerProfileInner />
+    </Suspense>
   )
 }
