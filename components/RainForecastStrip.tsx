@@ -50,7 +50,9 @@ export default function RainForecastStrip({ complexId }: { complexId: string }) 
   }
 
   const isRainingNow = forecast.headline === 'Raining now'
-  const isRainy = isRainingNow || forecast.headline.startsWith('Rain likely')
+  const isRainLikely = forecast.headline.startsWith('Rain likely')
+  const isSlightChance = forecast.headline.startsWith('Slight chance')
+  const isRainy = isRainingNow || isRainLikely
 
   const currentHour = new Date().getHours()
   const remainingHours = forecast.hourly.filter(h => parseInt(h.hour.slice(0, 2), 10) >= currentHour)
@@ -59,8 +61,8 @@ export default function RainForecastStrip({ complexId }: { complexId: string }) 
     <div>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm">
-          <span>{isRainy ? '🌧️' : '☀️'}</span>
-          <span className={isRainingNow ? 'text-blue-800 font-semibold' : isRainy ? 'text-blue-700 font-medium' : 'text-gray-600'}>{forecast.headline}</span>
+          <span>{isRainy ? '🌧️' : isSlightChance ? '🌦️' : '☀️'}</span>
+          <span className={isRainingNow ? 'text-blue-800 font-semibold' : isRainy ? 'text-blue-700 font-medium' : isSlightChance ? 'text-blue-500' : 'text-gray-600'}>{forecast.headline}</span>
         </div>
         {remainingHours.length > 0 && (
           <button

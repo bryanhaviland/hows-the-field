@@ -109,12 +109,17 @@ function buildHeadline(hourly: { hour: string; precipProbability: number }[]): s
   const now = new Date()
   const currentHour = now.getHours()
 
-  const rainyHours = hourly.filter(h => {
-    const hour = parseInt(h.hour.slice(0, 2), 10)
-    return hour >= currentHour && h.precipProbability >= RAIN_PROBABILITY_THRESHOLD
-  })
+  const remaining = hourly.filter(h => parseInt(h.hour.slice(0, 2), 10) >= currentHour)
+  if (remaining.length === 0) return 'No rain expected for the rest of today'
 
-  if (rainyHours.length === 0) return 'No rain expected for the rest of today'
+  const maxProb = Math.max(0, ...remaining.map(h => h.precipProbability))
+  if (maxProb === 0) return 'No rain expected for the rest of today'
+
+  const rainyHours = remaining.filter(h => h.precipProbability >= RAIN_PROBABILITY_THRESHOLD)
+
+  if (rainyHours.length === 0) {
+    return `Slight chance of rain later (up to ${maxProb}%)`
+  }
 
   const first = rainyHours[0]
   const last = rainyHours[rainyHours.length - 1]
