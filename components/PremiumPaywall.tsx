@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { usePremium } from '@/lib/premium-context'
 import { useAuth } from '@/lib/auth-context'
@@ -17,13 +17,57 @@ export default function PremiumPaywall({
   title = 'Today at the Field',
   description = 'Live field condition & parking check-ins from other parents, a rain forecast for game time, and a lightning monitor that tells you exactly how far out the last strike was — all in real time.',
 }: PremiumPaywallProps = {}) {
-  const { user } = useAuth()
-  const { offering, purchase, restore } = usePremium()
+  const { user, session } = useAuth()
+  const { offering, purchase, restore, refresh } = usePremium()
   const [showAuth, setShowAuth] = useState(false)
   const [purchasing, setPurchasing] = useState<string | null>(null)
   const [restoring, setRestoring] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
+  const [checkoutBanner, setCheckoutBanner] = useState<'success' | 'cancelled' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const isNative = Capacitor.isNativePlatform()
+
+  // Coming back from Stripe Checkout — pick up ?checkout=success|cancelled,
+  // strip it from the URL, and (on success) re-check entitlement. The
+  // webhook usually beats the redirect back here, but refresh() again in
+  // case it hasn't landed yet, same pattern as the native purchase() flow.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get('checkout')
+    if (result !== 'success' && result !== 'cancelled') return
+    params.delete('checkout')
+    const query = params.toString()
+    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`)
+    setCheckoutBanner(result)
+    if (result === 'success') {
+      refresh()
+      setTimeout(refresh, 3000)
+    }
+  }, [refresh])
+
+  const handleSubscribe = async () => {
+    if (!session?.access_token) return
+    setError(null)
+    setCheckingOut(true)
+    try {
+      const res = await fetch('https://howsthefield.com/api/premium/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ returnTo: window.location.pathname }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) {
+        setError(data.error ?? 'Could not start checkout — try again.')
+        setCheckingOut(false)
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setError('Could not reach the server — check your connection and try again.')
+      setCheckingOut(false)
+    }
+  }
 
   return (
     <div className="bg-gradient-to-br from-blue-50 to-amber-50 border border-blue-200 rounded-xl p-5 text-center">
@@ -81,10 +125,25 @@ export default function PremiumPaywall({
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
       ) : (
-        <p className="text-sm text-gray-500">
-          Field Conditions is a premium feature available in the How&apos;s the Field app — open the app on your
-          phone to subscribe. Already subscribed? Log in with the same account here to see it on the web too.
-        </p>
+        <div className="space-y-2 max-w-xs mx-auto">
+          {checkoutBanner === 'success' && (
+            <p className="text-sm text-green-700">You&apos;re subscribed! This may take a moment to unlock.</p>
+          )}
+          {checkoutBanner === 'cancelled' && (
+            <p className="text-xs text-gray-400">Checkout cancelled — no charge was made.</p>
+          )}
+          <button
+            disabled={checkingOut}
+            onClick={handleSubscribe}
+            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors"
+          >
+            {checkingOut ? 'Redirecting…' : 'Subscribe — $2.99 / month'}
+          </button>
+          <p className="text-xs text-gray-400">
+            Already subscribed in the app? Log in with the same account here to see it on the web too.
+          </p>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+        </div>
       )}
     </div>
   )

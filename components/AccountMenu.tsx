@@ -14,13 +14,15 @@ function initials(name: string) {
 }
 
 export default function AccountMenu() {
-  const { user, profile, needsProfile, signOut, updatePreferredSports, deleteAccount } = useAuth()
+  const { user, profile, needsProfile, session, signOut, updatePreferredSports, deleteAccount } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
   const [badge, setBadge] = useState<ReviewerBadgeType | null>(null)
   const [open, setOpen] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [managingSubscription, setManagingSubscription] = useState(false)
+  const [manageError, setManageError] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -55,6 +57,28 @@ export default function AccountMenu() {
       ? profile.preferred_sports.filter(x => x !== s)
       : [...profile.preferred_sports, s]
     updatePreferredSports(next)
+  }
+
+  const handleManageSubscription = async () => {
+    if (!session?.access_token) return
+    setManagingSubscription(true)
+    setManageError(null)
+    try {
+      const res = await fetch('https://howsthefield.com/api/premium/stripe-portal', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) {
+        setManageError(data.error ?? 'Could not open billing portal — try again.')
+        setManagingSubscription(false)
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setManageError('Could not reach the server — check your connection and try again.')
+      setManagingSubscription(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -125,6 +149,17 @@ export default function AccountMenu() {
             >
               Log Out
             </button>
+
+            {profile.premium_platform === 'stripe' && (
+              <button
+                onClick={handleManageSubscription}
+                disabled={managingSubscription}
+                className="w-full text-left text-gray-600 hover:text-gray-900 disabled:opacity-50"
+              >
+                {managingSubscription ? 'Opening…' : 'Manage Subscription'}
+              </button>
+            )}
+            {manageError && <p className="text-xs text-red-600">{manageError}</p>}
 
             {!confirmingDelete ? (
               <button

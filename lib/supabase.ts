@@ -90,6 +90,8 @@ export interface Profile {
   premium_product_id: string | null
   premium_expires_at: string | null
   premium_updated_at: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
   /** Sport types selected in the profile menu — used as the search page's default field-type filter. Empty = no preference. */
   preferred_sports: SportType[]
 }
