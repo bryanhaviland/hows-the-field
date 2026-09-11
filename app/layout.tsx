@@ -19,6 +19,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#1D4ED8',
   // Lets iOS extend content edge-to-edge under the notch/home indicator so the
   // safe-area-inset-* CSS vars above actually pick up real values.
