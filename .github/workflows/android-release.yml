@@ -4,16 +4,16 @@ name: Build Android Release AAB
 # Play Console. Runs on every push to main that touches the native app or
 # web bundle, and can also be triggered manually from the Actions tab.
 #
+# .env.production is committed to this repo, so Next.js picks up the
+# NEXT_PUBLIC_* values automatically during the build (same as Xcode
+# Cloud does for the iOS build) - no env secrets needed here.
+#
 # Requires these repository secrets (Settings -> Secrets and variables ->
 # Actions -> New repository secret):
 #   ANDROID_KEYSTORE_BASE64        base64 of android/app/howsthefield-release.jks
 #   ANDROID_KEYSTORE_PASSWORD      keystore.properties storePassword
 #   ANDROID_KEY_ALIAS              keystore.properties keyAlias
 #   ANDROID_KEY_PASSWORD           keystore.properties keyPassword
-#   NEXT_PUBLIC_SUPABASE_URL
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY
-#   NEXT_PUBLIC_REVENUECAT_IOS_API_KEY
 
 on:
   push:
@@ -52,11 +52,6 @@ jobs:
 
       - name: Build static web bundle
         run: npm run cap:build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY: ${{ secrets.NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY }}
-          NEXT_PUBLIC_REVENUECAT_IOS_API_KEY: ${{ secrets.NEXT_PUBLIC_REVENUECAT_IOS_API_KEY }}
 
       - name: Sync Capacitor Android project
         run: npx cap sync android
