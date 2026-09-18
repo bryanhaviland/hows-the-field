@@ -25,7 +25,12 @@ export default function PrivacyPage() {
           <li><span className="font-medium text-gray-900">Usage data:</span> basic technical data like device/browser type and pages visited, used to keep the Service working and secure.</li>
         </ul>
         <p className="mt-2">
-          We don&apos;t currently collect payment information — the Service is free to use.
+          <span className="font-medium text-gray-900">Subscription &amp; purchase information:</span>{' '}
+          if you subscribe to How&apos;s the Field? Premium, our payment processors (Apple, via
+          StoreKit and RevenueCat, for the app; Stripe for the website) handle your payment
+          details directly — we never see or store your card number. We receive limited
+          purchase information from them (such as subscription status, plan, and renewal date)
+          so we can unlock premium features on your account.
         </p>
       </Section>
 
@@ -52,9 +57,11 @@ export default function PrivacyPage() {
         <p>
           We don&apos;t sell your personal information. We share data only with service
           providers who help us run the Service under confidentiality obligations — currently
-          Supabase, which hosts our database and handles authentication — or when required by
-          law, to protect our rights, or in connection with a merger, acquisition, or sale of
-          assets.
+          Supabase, which hosts our database and handles authentication; and, if you subscribe
+          to Premium, Apple/RevenueCat (for in-app subscriptions) and Stripe (for web
+          subscriptions), which process payments and share limited subscription status data
+          back to us — or when required by law, to protect our rights, or in connection with a
+          merger, acquisition, or sale of assets.
         </p>
       </Section>
 

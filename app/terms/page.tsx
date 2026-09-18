@@ -60,7 +60,34 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="4. Acceptable Use">
+      <Section title="4. Premium Subscriptions &amp; Billing">
+        <p>
+          How&apos;s the Field? Premium is an auto-renewing subscription ($2.99/month unless
+          otherwise stated at checkout) that unlocks live field conditions, parking check-ins,
+          rain forecasts, and lightning alerts.
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>
+            <span className="font-medium text-gray-900">In the app:</span> subscriptions are
+            billed through your Apple Account. Payment is charged at confirmation of purchase,
+            and your subscription automatically renews unless you turn off auto-renew at least
+            24 hours before the end of the current period. Manage or cancel anytime in your
+            device Settings &gt; Apple Account &gt; Subscriptions.
+          </li>
+          <li>
+            <span className="font-medium text-gray-900">On the website:</span> subscriptions
+            are billed through Stripe and renew monthly until cancelled. You can cancel anytime
+            from your account, effective at the end of the current billing period — no partial
+            refunds for unused time.
+          </li>
+          <li>
+            Prices may change with advance notice; continuing your subscription after a price
+            change means you accept the new price.
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="5. Acceptable Use">
         <p>Don&apos;t use the Service to:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Post false, defamatory, harassing, or misleading reviews;</li>
@@ -71,7 +98,7 @@ export default function TermsPage() {
         </ul>
       </Section>
 
-      <Section title="5. No Warranty on Facility Information">
+      <Section title="6. No Warranty on Facility Information">
         <p>
           Complex and field information — including addresses, amenities, and conditions —
           comes from a mix of admin curation and crowd-sourced reports and can be outdated,
@@ -82,7 +109,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="6. Disclaimer of Warranties">
+      <Section title="7. Disclaimer of Warranties">
         <p>
           THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE,&quot; WITHOUT
           WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A
@@ -91,7 +118,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="7. Limitation of Liability">
+      <Section title="8. Limitation of Liability">
         <p>
           TO THE FULLEST EXTENT PERMITTED BY LAW, HOW&apos;S THE FIELD? AND ITS OPERATORS WILL
           NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
@@ -101,7 +128,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="8. Termination">
+      <Section title="9. Termination">
         <p>
           You can stop using the Service and delete your account at any time. We may suspend
           or terminate accounts that violate these Terms or that we believe pose a risk to
@@ -109,7 +136,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="9. Changes to These Terms">
+      <Section title="10. Changes to These Terms">
         <p>
           We may update these Terms from time to time. If we make material changes, we&apos;ll
           update the effective date above. Continued use of the Service after changes take
@@ -117,14 +144,14 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="10. Governing Law">
+      <Section title="11. Governing Law">
         <p>
           These Terms are governed by the laws of the State of Florida, without regard to
           conflict-of-law principles, unless applicable law requires otherwise.
         </p>
       </Section>
 
-      <Section title="11. Contact">
+      <Section title="12. Contact">
         <p>
           Questions about these Terms? Reach us at{' '}
           <a href="mailto:support@howsthefield.com" className="text-blue-600 hover:underline">

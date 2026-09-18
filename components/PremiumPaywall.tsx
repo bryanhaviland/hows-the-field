@@ -73,7 +73,28 @@ export default function PremiumPaywall({
     <div className="bg-gradient-to-br from-blue-50 to-amber-50 border border-blue-200 rounded-xl p-5 text-center">
       <div className="text-2xl mb-1">{icon}</div>
       <h3 className="font-semibold text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-600 mt-1 mb-4 max-w-sm mx-auto">{description}</p>
+      <p className="text-sm text-gray-600 mt-1 mb-3 max-w-sm mx-auto">{description}</p>
+      <p className="text-[11px] text-gray-400 mb-4">
+        By subscribing you agree to our{' '}
+        <a
+          href="https://howsthefield.com/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          Terms of Use
+        </a>{' '}
+        and{' '}
+        <a
+          href="https://howsthefield.com/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          Privacy Policy
+        </a>
+        .
+      </p>
 
       {!user ? (
         <>

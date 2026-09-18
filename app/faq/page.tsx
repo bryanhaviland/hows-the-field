@@ -43,7 +43,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: 'Do you have an iOS or Android app?',
-    a: 'The site works great in a mobile browser today. Native app availability may change — check back or follow our updates for the latest.',
+    a: 'Yes — How\'s the Field? is available on the App Store for iOS. An Android app may follow. The site also works great in a mobile browser if you\'d rather not install anything.',
   },
   {
     q: 'How do I delete my account?',
