@@ -64,37 +64,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Tag every account created through How's the Field so signIn() can tell it apart
     // from an account that only exists because it was created by a different app sharing
     // this Supabase project (e.g. Fill My Roster).
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { htf_signup: true } },
-    })
-    if (error) return { error: error.message, needsEmailConfirm: false }
-    return { error: null, needsEmailConfirm: !data.session }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { htf_signup: true } },
+      })
+      if (error) return { error: error.message, needsEmailConfirm: false }
+      return { error: null, needsEmailConfirm: !data.session }
+    } catch {
+      // A thrown (rather than returned) error here used to leave the caller's
+      // "submitting" state stuck forever — App Review hit this as an
+      // infinite spinner on "Create account" (Guideline 2.1(a)).
+      return { error: 'Could not reach the server — check your connection and try again.', needsEmailConfirm: false }
+    }
   }
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: error.message }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) return { error: error.message }
 
-    // Block sign-in for accounts that only exist via a different app on this shared
-    // Supabase project. A real How's the Field account either has the htf_signup flag
-    // (set at signUp above) or, for accounts created before this check existed, an
-    // existing profiles row.
-    const user = data.user
-    if (user && user.user_metadata?.htf_signup !== true) {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (!existingProfile) {
-        await supabase.auth.signOut()
-        return { error: "We don't have a How's the Field account for that email yet. Use \"Create account\" to sign up." }
+      // Block sign-in for accounts that only exist via a different app on this shared
+      // Supabase project. A real How's the Field account either has the htf_signup flag
+      // (set at signUp above) or, for accounts created before this check existed, an
+      // existing profiles row.
+      const user = data.user
+      if (user && user.user_metadata?.htf_signup !== true) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (!existingProfile) {
+          await supabase.auth.signOut()
+          return { error: "We don't have a How's the Field account for that email yet. Use \"Create account\" to sign up." }
+        }
       }
-    }
 
-    return { error: null }
+      return { error: null }
+    } catch {
+      return { error: 'Could not reach the server — check your connection and try again.' }
+    }
   }
 
   const signOut = async () => {

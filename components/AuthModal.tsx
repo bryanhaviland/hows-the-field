@@ -24,20 +24,27 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     setInfo(null)
     setSubmitting(true)
 
-    if (mode === 'sign-in') {
-      const { error } = await signIn(email, password)
-      setSubmitting(false)
-      if (error) { setError(error); return }
-      onClose()
-    } else {
-      const { error, needsEmailConfirm } = await signUp(email, password)
-      setSubmitting(false)
-      if (error) { setError(error); return }
-      if (needsEmailConfirm) {
-        setInfo('Check your email to confirm your account, then sign in.')
-      } else {
+    try {
+      if (mode === 'sign-in') {
+        const { error } = await signIn(email, password)
+        if (error) { setError(error); return }
         onClose()
+      } else {
+        const { error, needsEmailConfirm } = await signUp(email, password)
+        if (error) { setError(error); return }
+        if (needsEmailConfirm) {
+          setInfo('Check your email to confirm your account, then sign in.')
+        } else {
+          onClose()
+        }
       }
+    } catch {
+      // signIn/signUp are defensive about network errors themselves, but this
+      // is the last line of defense — never leave the button stuck on
+      // "Please wait..." (this is what App Review hit: Guideline 2.1(a)).
+      setError('Something went wrong — check your connection and try again.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
