@@ -96,17 +96,7 @@ export default function PremiumPaywall({
         .
       </p>
 
-      {!user ? (
-        <>
-          <button
-            onClick={() => setShowAuth(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-          >
-            Log in to subscribe
-          </button>
-          {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-        </>
-      ) : isNative ? (
+      {isNative ? (
         <div className="space-y-2 max-w-xs mx-auto">
           {offering && offering.availablePackages.length > 0 ? (
             offering.availablePackages.map(pkg => (
@@ -144,7 +134,32 @@ export default function PremiumPaywall({
             {restoring ? 'Restoring…' : 'Restore purchases'}
           </button>
           {error && <p className="text-sm text-red-600">{error}</p>}
+          {/* Registration is never required to subscribe (App Review 5.1.1(v)) — this
+              is purely an optional way to carry the subscription to other devices. */}
+          {!user && (
+            <p className="text-xs text-gray-400 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowAuth(true)}
+                className="underline hover:text-gray-600"
+              >
+                Create an account
+              </button>{' '}
+              to also see this on your other devices.
+            </p>
+          )}
+          {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
         </div>
+      ) : !user ? (
+        <>
+          <button
+            onClick={() => setShowAuth(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+          >
+            Log in to subscribe
+          </button>
+          {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        </>
       ) : (
         <div className="space-y-2 max-w-xs mx-auto">
           {checkoutBanner === 'success' && (

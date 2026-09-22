@@ -102,10 +102,13 @@ export async function POST(req: NextRequest) {
     isPremium = false
   }
 
-  // app_user_id is the Supabase user id — set via Purchases.logIn(user.id)
-  // on the client the moment someone signs in, so this always lines up
-  // with a profiles row (if that hasn't happened yet, there's nothing to
-  // update and we just no-op rather than error the webhook).
+  // app_user_id is the Supabase user id once someone has signed in — set via
+  // Purchases.logIn(user.id) on the client. Purchases made without an account
+  // (allowed since App Review requires registration never gate a purchase —
+  // guideline 5.1.1(v)) carry RevenueCat's own anonymous id instead, which
+  // won't match any profiles row; that's expected, not an error — the app
+  // relies on RevenueCat's on-device entitlement check for those, and this
+  // row gets backfilled once/if the purchaser signs up and we log them in.
   const { error } = await admin
     .from('profiles')
     .update({

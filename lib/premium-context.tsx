@@ -32,7 +32,11 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [offering, setOffering] = useState<PurchasesOffering | null>(null)
   const [nativeLoading, setNativeLoading] = useState(Capacitor.isNativePlatform())
   const [profileIsPremium, setProfileIsPremium] = useState<boolean | null>(null)
+  // Which Supabase user id (if any) RevenueCat is currently logged in as. Null
+  // means RevenueCat is running anonymously (device-identified only) — that's
+  // the default and normal state for a purchaser who hasn't created an account.
   const configuredForUserId = useRef<string | null>(null)
+  const initialized = useRef(false)
 
   // Keep our own copy in sync with AuthProvider's profile (it already
   // selects '*', so is_premium rides along), but also allow refresh()
@@ -41,11 +45,14 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     setProfileIsPremium(profile?.is_premium ?? null)
   }, [profile?.is_premium])
 
+  // Configure RevenueCat as soon as we're on a native platform — independent of
+  // whether a How's the Field account exists. App Review guideline 5.1.1(v):
+  // purchases must be possible without requiring registration first. With no
+  // appUserID, RevenueCat generates and persists its own anonymous id for this
+  // device, which is enough to unlock the purchase immediately.
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !user) {
-      setNativeLoading(false)
-      return
-    }
+    if (!Capacitor.isNativePlatform() || initialized.current) return
+    initialized.current = true
 
     let cancelled = false
 
@@ -64,13 +71,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        if (configuredForUserId.current === null) {
-          await Purchases.configure({ apiKey, appUserID: user.id })
-          configuredForUserId.current = user.id
-        } else if (configuredForUserId.current !== user.id) {
-          await Purchases.logIn({ appUserID: user.id })
-          configuredForUserId.current = user.id
-        }
+        await Purchases.configure({ apiKey })
 
         const [{ customerInfo }, offerings] = await Promise.all([
           Purchases.getCustomerInfo(),
@@ -90,22 +91,49 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // Signed in (including signing up right after an anonymous purchase) — link this
+  // device's RevenueCat identity to the Supabase account, so a subscription bought
+  // anonymously carries forward to other devices and the web, as Apple requires we
+  // offer (optionally, never as a purchase prerequisite).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !initialized.current || !user) return
+    if (configuredForUserId.current === user.id) return
+
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const { Purchases } = await import('@revenuecat/purchases-capacitor')
+        const { customerInfo } = await Purchases.logIn({ appUserID: user.id })
+        if (cancelled) return
+        configuredForUserId.current = user.id
+        setNativeEntitlementActive(!!customerInfo.entitlements.active[ENTITLEMENT_ID])
+      } catch (err) {
+        console.error('[premium] RevenueCat logIn failed', err)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [user])
 
-  // Signed out — clear the native session so the next sign-in (possibly a
-  // different account on a shared device) doesn't inherit this one's entitlement.
+  // Signed out — log back out to an anonymous RevenueCat identity so the next
+  // sign-in (possibly a different account on a shared device) doesn't inherit
+  // this one's entitlement.
   useEffect(() => {
     if (user || !Capacitor.isNativePlatform() || configuredForUserId.current === null) return
     ;(async () => {
       try {
         const { Purchases } = await import('@revenuecat/purchases-capacitor')
-        await Purchases.logOut()
+        const { customerInfo } = await Purchases.logOut()
+        setNativeEntitlementActive(!!customerInfo.entitlements.active[ENTITLEMENT_ID])
       } catch {
         // not configured yet / already logged out — fine
       }
       configuredForUserId.current = null
-      setNativeEntitlementActive(null)
-      setOffering(null)
     })()
   }, [user])
 
@@ -114,7 +142,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.from('profiles').select('is_premium').eq('id', user.id).maybeSingle()
       if (data) setProfileIsPremium(data.is_premium)
     }
-    if (Capacitor.isNativePlatform() && configuredForUserId.current) {
+    if (Capacitor.isNativePlatform() && initialized.current) {
       try {
         const { Purchases } = await import('@revenuecat/purchases-capacitor')
         const { customerInfo } = await Purchases.getCustomerInfo()
