@@ -18,7 +18,7 @@ export default function PremiumPaywall({
   description = 'Live field condition & parking check-ins from other parents, a rain forecast for game time, and a lightning monitor that tells you exactly how far out the last strike was — all in real time.',
 }: PremiumPaywallProps = {}) {
   const { user, session } = useAuth()
-  const { offering, purchase, restore, refresh } = usePremium()
+  const { offering, offeringsError, retryOfferings, purchase, restore, refresh } = usePremium()
   const [showAuth, setShowAuth] = useState(false)
   const [purchasing, setPurchasing] = useState<string | null>(null)
   const [restoring, setRestoring] = useState(false)
@@ -117,6 +117,17 @@ export default function PremiumPaywall({
                   : `Subscribe — ${pkg.product.priceString} ${describePeriod(pkg.packageType)}`}
               </button>
             ))
+          ) : offeringsError ? (
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">Couldn&apos;t load subscription options.</p>
+              <button
+                type="button"
+                onClick={() => retryOfferings()}
+                className="text-xs text-blue-600 underline hover:text-blue-700"
+              >
+                Try again
+              </button>
+            </div>
           ) : (
             <p className="text-sm text-gray-400">Loading subscription options…</p>
           )}

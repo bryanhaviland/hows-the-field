@@ -16,8 +16,12 @@ interface PremiumContextValue {
   isPremium: boolean
   /** Still figuring out entitlement status — avoid flashing a paywall before this resolves. */
   loading: boolean
-  /** RevenueCat's current offering (packages available to purchase). Null on web or before it loads. */
+  /** RevenueCat's current offering (packages available to purchase). Null on web, before it loads, or on failure. */
   offering: PurchasesOffering | null
+  /** True once offerings have failed to load (or came back empty) — lets the UI stop claiming to be "loading" and offer a retry instead. */
+  offeringsError: boolean
+  /** Re-fetches offerings after a failure. Safe to call repeatedly (e.g. from a "Try again" button). */
+  retryOfferings: () => void
   purchase: (pkg: PurchasesPackage) => Promise<{ error: string | null }>
   restore: () => Promise<{ error: string | null }>
   /** Re-checks entitlement from Supabase — call after a purchase in case the webhook needs a moment. */
@@ -30,6 +34,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth()
   const [nativeEntitlementActive, setNativeEntitlementActive] = useState<boolean | null>(null)
   const [offering, setOffering] = useState<PurchasesOffering | null>(null)
+  const [offeringsError, setOfferingsError] = useState(false)
   const [nativeLoading, setNativeLoading] = useState(Capacitor.isNativePlatform())
   const [profileIsPremium, setProfileIsPremium] = useState<boolean | null>(null)
   // Which Supabase user id (if any) RevenueCat is currently logged in as. Null
@@ -45,6 +50,32 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     setProfileIsPremium(profile?.is_premium ?? null)
   }, [profile?.is_premium])
 
+  // Fetches (or re-fetches) RevenueCat's current offering. Split out from the
+  // init effect below so a failed/empty load — which previously left the
+  // paywall stuck on "Loading subscription options…" forever (App Review
+  // Guideline 2.1(b), Sep 2026) — can be retried from the UI instead of
+  // silently swallowed.
+  const loadOfferings = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return
+    setOfferingsError(false)
+    try {
+      const { Purchases } = await import('@revenuecat/purchases-capacitor')
+      const offerings = await Purchases.getOfferings()
+      const current = offerings.current
+      if (current && current.availablePackages.length > 0) {
+        setOffering(current)
+      } else {
+        console.warn('[premium] RevenueCat returned no current offering with packages')
+        setOffering(null)
+        setOfferingsError(true)
+      }
+    } catch (err) {
+      console.error('[premium] Failed to load offerings', err)
+      setOffering(null)
+      setOfferingsError(true)
+    }
+  }, [])
+
   // Configure RevenueCat as soon as we're on a native platform — independent of
   // whether a How's the Field account exists. App Review guideline 5.1.1(v):
   // purchases must be possible without requiring registration first. With no
@@ -55,6 +86,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     initialized.current = true
 
     let cancelled = false
+    let configured = false
 
     ;(async () => {
       try {
@@ -67,31 +99,31 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
 
         if (!apiKey) {
           console.warn('[premium] No RevenueCat API key configured for platform', platform)
-          if (!cancelled) setNativeLoading(false)
           return
         }
 
         await Purchases.configure({ apiKey })
+        configured = true
 
-        const [{ customerInfo }, offerings] = await Promise.all([
-          Purchases.getCustomerInfo(),
-          Purchases.getOfferings().catch(() => null),
-        ])
-
+        const { customerInfo } = await Purchases.getCustomerInfo()
         if (cancelled) return
         setNativeEntitlementActive(!!customerInfo.entitlements.active[ENTITLEMENT_ID])
-        setOffering(offerings?.current ?? null)
       } catch (err) {
         console.error('[premium] RevenueCat init failed', err)
       } finally {
         if (!cancelled) setNativeLoading(false)
       }
+
+      // Only attempt offerings once RevenueCat is actually configured — and
+      // don't let a slow/failed offerings fetch hold up nativeLoading, which
+      // gates entitlement checks elsewhere in the app.
+      if (configured && !cancelled) loadOfferings()
     })()
 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [loadOfferings])
 
   // Signed in (including signing up right after an anonymous purchase) — link this
   // device's RevenueCat identity to the Supabase account, so a subscription bought
@@ -196,6 +228,8 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     isPremium,
     loading: nativeLoading,
     offering,
+    offeringsError,
+    retryOfferings: loadOfferings,
     purchase,
     restore,
     refresh,
